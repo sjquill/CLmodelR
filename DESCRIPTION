@@ -1,0 +1,11 @@
+Package: CLmodelR
+Title: State-Space Model of County Lines Drug Trafficking
+Version: 0.0.0.9000
+Authors@R: 
+    person("Kate", "Hayes", , "khayes2@sheffield.ac.uk", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-6484-8949"))
+Description: Runs a model simulating aspects of the county lines drug trafficking system
+License: use_mit_license()
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1
