@@ -175,6 +175,8 @@ child_recr = odin::odin({
   test_prev_CL[] <- W[i]/N[i]
   test_incarcerated[] <- J[i]
 
+
+
   #making the mixing matrix help
   ##first, weird mixing bits for recruitment that you'll probably need to take out later
   II[] <- N_1[i]/N[i] + (1-(N_1[i]/N[i]))/alpha
