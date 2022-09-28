@@ -3,7 +3,7 @@
 
 ##############WHERE IS THE DATA########################################################
 ##https://www.gov.uk/government/publications/youth-custody-data
-##Monthly statistics on the population in custody of children and young people within the secure estate.
+##Monthly(!!!) statistics on the population in custody of children and young people within the secure estate.
 ##broken down by gender, age, race, some other stuff
 ##this is national data i think (maybe england and wales, need to check)
 
@@ -19,6 +19,9 @@
 ##there is also sheet 7.32, which gives some distribution of nights spent in custody in West midlands (1 to 91 nights, 92 to 182 nights,
 ## 183 to 273 nights, 274+ nights) yearly from 2019 to 2021
 ## you can also get dist of nights by custody type, for the whole country only though, on sheet 7.27
+
+##also in the supplementary tables! is chapter 6, use of remand... i do not think local level data is available :()
+
 
 ##https://www.gov.uk/government/statistics/length-of-time-spent-in-youth-custody-2016-to-2017
 ##This is a one-off publication, with the focus on episodes children and young people spent in custody which ended
@@ -43,5 +46,194 @@
 
 
 install.packages("readODS")
+install.packages("readxl")
+install.packages('ggplot2')
 library(readODS)
+library(readxl)
+library(ggplot2)
+library(stringr)
+library(dplyr)
+library(tidyverse)
+##figure out what the good practise is about installing and loading packages
+##leaving them in the code or not... also, loading tidyverse vs loading its consitutent parts
+
+##coming here from local level open data, outcomes table
+##children sentenced to custody in birmingham, yearly, 2013/14 t0 2020/21
+custody_data <- read_ods("/Users/katehayes/temp_data/Outcome_table.ods", sheet = 3)
+
+custody_plot <- ggplot(custody_data[custody_data$YJS == "Birmingham" & custody_data$Caution_or_sentence_tier == "Custody", ], aes(x = Financial_Year, y = Number_Cautioned_Sentenced, fill = Caution_or_sentence_type)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+custody_plot
+
+##where is children on remand data? only national and yearly.
+##so if this is the case then i might have to construct yearly average probabilities of remand into bail, custody, whatever
+##and then apply these to the (hopefully) local numbers of children getting charged in birmingham
+
+
+##SO this is phenomenally messy - come back and re-do entirely!!!!
+##would be a good exercise in how to clean data sanely and not just in a big rush/dangerously
+
+##year ending march 21
+remand_data <- read_xls("/Users/katehayes/temp_data/Ch 6 - Use of remand for children.xls", sheet = 2, skip = 3, n_max = 17)
+remand_data <- remand_data[!is.na(remand_data$`Remand type`), ]
+remand_data <- remand_data[ , !names(remand_data) %in% "Total"]
+
+remand_group_names <- remand_data[is.na(remand_data$`Black`), 1]
+remand_group_names <- unlist(remand_group_names, use.names = FALSE)
+
+child_groups <- read_xls("/Users/katehayes/temp_data/Ch 6 - Use of remand for children.xls", sheet = 2, skip = 2, n_max = 1, col_names = FALSE)
+child_groups <- child_groups[!is.na(child_groups)]
+child_groups <- unlist(child_groups, use.names = FALSE)
+
+colnames(remand_data)[7] <- paste("Unknown", child_groups[1])
+colnames(remand_data)[11] <- paste("Unknown", child_groups[2])
+
+
+remand_data <- remand_data[!str_detect(remand_data$`Remand type`, "Total"),]
+remand_data <- remand_data[!is.na(remand_data$`Asian`), ]
+remand_data <- remand_data[ , colSums(is.na(remand_data)) == 0]
+remand_data$`Asian` <- as.numeric(remand_data$`Asian`)
+
+
+remand_data <- remand_data %>%
+                      pivot_longer(!`Remand type`,
+                                  names_to="child_characteristics",
+                                  values_to="number_remands")
+
+
+remand_data <- remand_data %>%
+                      mutate(remand_groups=case_when(
+                        `Remand type`=="Unconditional Bail" | `Remand type`=="Conditional Bail" ~ remand_group_names[1],
+                        `Remand type`=="Bail Supervision and Support" | `Remand type`=="ISS Bail" | `Remand type`=="Remand to Local Authority Accommodation" ~ remand_group_names[2],
+                        `Remand type`=="Remand to Youth Detention Accommodation" ~ remand_group_names[3],
+                      ))
+
+remand_data$year <-  2021
+
+remand_data_21 <-  remand_data
+
+##year ending march 20
+
+remand_data <- read_xls("/Users/katehayes/temp_data/youth-justice-statistics-2019-20-supplementary-tables/Ch 6 - Use of remand for children.xls", sheet = 2, skip = 3, n_max = 17)
+remand_data <- remand_data[!is.na(remand_data$`Remand type`), ]
+remand_data <- remand_data[ , !names(remand_data) %in% "Total"]
+
+remand_group_names <- remand_data[is.na(remand_data$`Black`), 1]
+remand_group_names <- unlist(remand_group_names, use.names = FALSE)
+
+child_groups <- read_xls("/Users/katehayes/temp_data/youth-justice-statistics-2019-20-supplementary-tables/Ch 6 - Use of remand for children.xls", sheet = 2, skip = 2, n_max = 1, col_names = FALSE)
+child_groups <- child_groups[!is.na(child_groups)]
+child_groups <- unlist(child_groups, use.names = FALSE)
+
+colnames(remand_data)[7] <- paste("Unknown", child_groups[1])
+colnames(remand_data)[11] <- paste("Unknown", child_groups[2])
+
+
+remand_data <- remand_data[!str_detect(remand_data$`Remand type`, "Total"),]
+remand_data <- remand_data[!is.na(remand_data$`Asian`), ]
+remand_data <- remand_data[ , colSums(is.na(remand_data)) == 0]
+remand_data$`Asian` <- as.numeric(remand_data$`Asian`)
+
+
+remand_data <- remand_data %>%
+  pivot_longer(!`Remand type`,
+               names_to="child_characteristics",
+               values_to="number_remands")
+
+
+remand_data <- remand_data %>%
+  mutate(remand_groups=case_when(
+    `Remand type`=="Unconditional Bail" | `Remand type`=="Conditional Bail" ~ remand_group_names[1],
+    `Remand type`=="Bail Supervision and Support" | `Remand type`=="ISS Bail" | `Remand type`=="Remand to Local Authority Accommodation" ~ remand_group_names[2],
+    `Remand type`=="Remand to Youth Detention Accommodation" ~ remand_group_names[3],
+  ))
+
+remand_data$year <-  2020
+
+remand_data_20 <-  remand_data
+
+##lol, so it worked for year ending March 20 (against all odds)
+##obv need to come back and make it less hardcody and then make it a function that returns a dataset of all the years
+##now year end march 2019.....
+##this one won't open - i had to open and resave as .xlsx - annoying
+
+remand_data <- read_xlsx("/Users/katehayes/temp_data/youth-justice-stats-supplementary-tables-march-2019/Ch 6 - Use of remand for children.xls", sheet = 2, skip = 3, n_max = 17)
+remand_data <- remand_data[!is.na(remand_data$`Remand type`), ]
+remand_data <- remand_data[ , !names(remand_data) %in% "Total"]
+
+remand_group_names <- remand_data[is.na(remand_data$`Black`), 1]
+remand_group_names <- unlist(remand_group_names, use.names = FALSE)
+
+child_groups <- read_xlsx("/Users/katehayes/temp_data/youth-justice-stats-supplementary-tables-march-2019/Ch 6 - Use of remand for children.xls", sheet = 2, skip = 2, n_max = 1, col_names = FALSE)
+child_groups <- child_groups[!is.na(child_groups)]
+child_groups <- unlist(child_groups, use.names = FALSE)
+
+colnames(remand_data)[7] <- paste("Unknown", child_groups[1])
+colnames(remand_data)[11] <- paste("Unknown", child_groups[2])
+
+
+remand_data <- remand_data[!str_detect(remand_data$`Remand type`, "Total"),]
+remand_data <- remand_data[!is.na(remand_data$`Asian`), ]
+remand_data <- remand_data[ , colSums(is.na(remand_data)) == 0]
+remand_data$`Asian` <- as.numeric(remand_data$`Asian`)
+
+
+remand_data <- remand_data %>%
+  pivot_longer(!`Remand type`,
+               names_to="child_characteristics",
+               values_to="number_remands")
+
+
+remand_data <- remand_data %>%
+  mutate(remand_groups=case_when(
+    `Remand type`=="Unconditional Bail" | `Remand type`=="Conditional Bail" ~ remand_group_names[1],
+    `Remand type`=="Bail Supervision and Support" | `Remand type`=="ISS Bail" | `Remand type`=="Remand to Local Authority Accommodation" ~ remand_group_names[2],
+    `Remand type`=="Remand to Youth Detention Accommodation" ~ remand_group_names[3],
+  ))
+
+remand_data$year <-  2019
+remand_data_19 <-  remand_data
+
+
+##now year end march 2018....LOL
+##ITS COMPLETELY DIFFERENT LAYOUT
+##FUCK
+remand_data <- read_xlsx("/Users/katehayes/temp_data/youth_justice_statistics_supplementary_tables_2017_2018/Ch 6 - Use of remand for children.xls", sheet = 2, skip = 3, n_max = 17)
+
+
+##ok just going to bind the first three together and see what i get
+##then plotting it
+##lol..when you do this command:
+##remand_plot <- ggplot(remand_data[remand_data$`Remand type` == "Remand to Youth Detention Accommodation", ], aes(x = year, y = number_remands)) +
+##geom_bar(stat = "identity") +
+## theme(axis.text.x=element_text(angle = -90, hjust = 0))
+##.....you're adding so many more remands than there are.... 3 times more...because youre adding all ages, all genders, all ethnicities...
+## fix that.. for the moment just subset
+
+remand_data <- rbind(remand_data_19, remand_data_20, remand_data_21)
+r_sex <- remand_data[remand_data$child_characteristics == "Boys" | remand_data$child_characteristics == "Girls" | remand_data$child_characteristics == "Unknown Sex" , ]
+
+
+remand_plot <- ggplot(r_sex, aes(x = year, y = number_remands, fill = remand_groups)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+remand_plot
+
+## lets say remand into youth detention accommodation is about 10% of all remand episodes
+
+##################CHILDREN PROCEEDED AGAINST######################################
+##in the youth justice statistics supplementaries you can get children proceeded against in magistrates court
+
+
+
+################# Average monthly youth custody population by legal basis for detention######################################
+##in the youth justice statistics supplementaries chapter 7 , sheet 7.21, at west midlands level
+
+
+remand_data <- read_xlsx("/Users/katehayes/temp_data/youth_justice_statistics_supplementary_tables_2017_2018/Ch 6 - Use of remand for children.xls", sheet = 2, skip = 3, n_max = 17)
+
+#Ch 7 - Children in youth custody.xls
 
