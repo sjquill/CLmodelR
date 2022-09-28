@@ -54,6 +54,7 @@ library(ggplot2)
 library(stringr)
 library(dplyr)
 library(tidyverse)
+library(vctrs)
 ##figure out what the good practise is about installing and loading packages
 ##leaving them in the code or not... also, loading tidyverse vs loading its consitutent parts
 
@@ -200,7 +201,7 @@ remand_data_19 <-  remand_data
 ##now year end march 2018....LOL
 ##ITS COMPLETELY DIFFERENT LAYOUT
 ##FUCK
-remand_data <- read_xlsx("/Users/katehayes/temp_data/youth_justice_statistics_supplementary_tables_2017_2018/Ch 6 - Use of remand for children.xls", sheet = 2, skip = 3, n_max = 17)
+##remand_data <- read_xlsx("/Users/katehayes/temp_data/youth_justice_statistics_supplementary_tables_2017_2018/Ch 6 - Use of remand for children.xls", sheet = 2, skip = 3, n_max = 17)
 
 
 ##ok just going to bind the first three together and see what i get
@@ -228,12 +229,146 @@ remand_plot
 ##in the youth justice statistics supplementaries you can get children proceeded against in magistrates court
 
 
-
 ################# Average monthly youth custody population by legal basis for detention######################################
 ##in the youth justice statistics supplementaries chapter 7 , sheet 7.21, at west midlands level
+##Average monthly youth custody population by region of home Youth Justice Service
+## and legal basis for detention (under 18s only), years ending March 2012 to 2021
+
+custody_data <- read_xlsx("/Users/katehayes/temp_data/Ch 7 - Children in youth custody.xls", sheet = 22, skip = 3, n_max = 48)
+
+colnames(custody_data)[2] <- "region_home_yjs"
+
+custody_data <- custody_data %>%
+  mutate(`Legal basis` = vec_fill_missing(`Legal basis`, direction = c("down"))) ## i like this
+
+custody_data <- custody_data[!is.na(custody_data$region_home_yjs), ]
+
+custody_data <- custody_data %>%
+  pivot_longer(starts_with("20"),
+               names_to="year",
+               values_to="number_in_custody")
+
+custody_plot <- ggplot(custody_data[custody_data$region_home_yjs == "West Midlands", ], aes(x = year, y = number_in_custody, fill = `Legal basis`)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+custody_plot
+
+################# Average monthly youth custody population by ethnicty######################################
+##in the youth justice statistics supplementaries chapter 7 , sheet 7.20, at west midlands level
+##ATable 7.20: Average monthly youth custody population by region of home Youth Justice Service
+## aand ethnicity (under 18s only), years ending March 2012 to 2021
+
+custody_eth_data <- read_xlsx("/Users/katehayes/temp_data/Ch 7 - Children in youth custody.xls", sheet = 21, skip = 3, n_max = 62)
+colnames(custody_eth_data)[2] <- "region_home_yjs"
+
+custody_eth_data <- custody_eth_data %>%
+  mutate(Ethnicity = vec_fill_missing(Ethnicity, direction = c("down")))
+
+custody_eth_data <- custody_eth_data[!is.na(custody_eth_data$region_home_yjs), ]
+
+custody_eth_data <- custody_eth_data %>%
+  pivot_longer(starts_with("20"),
+               names_to="year",
+               values_to="number_in_custody")
 
 
-remand_data <- read_xlsx("/Users/katehayes/temp_data/youth_justice_statistics_supplementary_tables_2017_2018/Ch 6 - Use of remand for children.xls", sheet = 2, skip = 3, n_max = 17)
+custody_eth_plot <- ggplot(custody_eth_data[custody_eth_data$region_home_yjs == "West Midlands", ], aes(x = year, y = number_in_custody, fill = Ethnicity)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
 
-#Ch 7 - Children in youth custody.xls
+custody_eth_plot
+##ethnic minority groups are being counted twice! remove the summary measure
+
+
+################# Average monthly youth custody population by gender######################################
+custody_gen_data <- read_xlsx("/Users/katehayes/temp_data/Ch 7 - Children in youth custody.xls", sheet = 20, skip = 3, n_max = 24)
+colnames(custody_gen_data)[2] <- "region_home_yjs"
+
+custody_gen_data <- custody_gen_data %>%
+  mutate(Gender = vec_fill_missing(Gender, direction = c("down")))
+
+custody_gen_data <- custody_gen_data[!is.na(custody_gen_data$region_home_yjs), ]
+
+custody_gen_data <- custody_gen_data %>%
+  pivot_longer(starts_with("20"),
+               names_to="year",
+               values_to="number_in_custody")
+
+
+custody_gen_plot <- ggplot(custody_gen_data[custody_gen_data$region_home_yjs == "West Midlands", ], aes(x = year, y = number_in_custody, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+custody_gen_plot
+
+
+
+
+################# Average monthly youth custody population by age UNDER !8######################################
+custody_age_data <- read_xlsx("/Users/katehayes/temp_data/Ch 7 - Children in youth custody.xls", sheet = 19, skip = 3, n_max = 48)
+colnames(custody_age_data)[2] <- "region_home_yjs"
+
+custody_age_data <- custody_age_data %>%
+  mutate(Age = vec_fill_missing(Age, direction = c("down")))
+
+custody_age_data <- custody_age_data[!is.na(custody_age_data$region_home_yjs), ]
+
+custody_age_data <- custody_age_data %>%
+  pivot_longer(starts_with("20"),
+               names_to="year",
+               values_to="number_in_custody")
+
+
+custody_age_plot <- ggplot(custody_age_data[custody_age_data$region_home_yjs == "West Midlands", ], aes(x = year, y = number_in_custody, fill = Age)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+custody_age_plot
+
+
+################# time in custody######################################
+##Table 7.32: Legal basis episodes ending by Youth Justice Service region(1) and nights, years ending March 2019 to 2021
+
+custody_time_data <- read_xlsx("/Users/katehayes/temp_data/Ch 7 - Children in youth custody.xls", sheet = 33, skip = 3, n_max = 71)
+custody_time_data <- custody_time_data[,1:5]
+colnames(custody_time_data)[1] <- "region_home_yjs"
+colnames(custody_time_data)[2] <- "number_nights"
+colnames(custody_time_data)[3] <- "2019"
+colnames(custody_time_data)[4] <- "2020"
+colnames(custody_time_data)[5] <- "2021"
+
+custody_time_data <- custody_time_data %>%
+  mutate(region_home_yjs = vec_fill_missing(region_home_yjs, direction = c("down")))
+
+custody_time_data <- custody_time_data[!is.na(custody_time_data[2]), ]
+
+custody_time_data <- custody_time_data %>%
+  pivot_longer(starts_with("20"),
+               names_to="year",
+               values_to="number_in_timespan")
+
+#####this one requires more careful thinking about how to graph
+
+##Table 7.27: Legal Basis ending by legal basis type and nights, years ending March 2019 to 2021
+custody_time_data2 <- read_xlsx("/Users/katehayes/temp_data/Ch 7 - Children in youth custody.xls", sheet = 28, skip = 3, n_max = 22)
+custody_time_data2 <- custody_time_data2[,1:5] ##lol find a better name than 2
+colnames(custody_time_data2)[1] <- "legal_basis"
+colnames(custody_time_data2)[2] <- "number_nights"
+colnames(custody_time_data2)[3] <- "2019"
+colnames(custody_time_data2)[4] <- "2020"
+colnames(custody_time_data2)[5] <- "2021"
+
+custody_time_data2 <- custody_time_data2 %>%
+  mutate(legal_basis = vec_fill_missing(legal_basis, direction = c("down")))
+
+custody_time_data2 <- custody_time_data2[!is.na(custody_time_data[2]), ]
+
+custody_time_data <- custody_time_data %>%
+  pivot_longer(starts_with("20"),
+               names_to="year",
+               values_to="number_in_timespan")
+
+
+
 
