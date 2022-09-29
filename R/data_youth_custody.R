@@ -364,7 +364,7 @@ custody_time_data2 <- custody_time_data2 %>%
 
 custody_time_data2 <- custody_time_data2[!is.na(custody_time_data[2]), ]
 
-custody_time_data <- custody_time_data %>%
+custody_time_data2 <- custody_time_data2 %>%
   pivot_longer(starts_with("20"),
                names_to="year",
                values_to="number_in_timespan")
