@@ -68,10 +68,47 @@ custody_plot <- ggplot(custody_data[custody_data$YJS == "Birmingham" & custody_d
 
 custody_plot
 
+custody_data <- custody_data[,1:8]
+
+custody_group_data <- custody_data %>%
+  filter(YJS == "Birmingham") %>%
+  group_by(Financial_Year, Caution_or_sentence_type, Caution_or_sentence_tier) %>%
+  summarise(tot_caut_sent = sum(Number_Cautioned_Sentenced))
+
+cust_data <- custody_group_data %>%
+  filter(Caution_or_sentence_tier == "Custody") %>%
+  group_by(Financial_Year) %>%
+    summarise(tot_cust = sum(tot_caut_sent))
+
+##ok for my model groupings i need custody, i also need
+##compensation, conditional discharge, referral order, youth conditional caution, youth rehabilitation order as restricted
+
+custody_data <- custody_data %>%
+                  filter(YJS == "Birmingham") %>%
+                    group_by(Financial_Year, Caution_or_sentence_type) %>%
+                      summarise(tot_caut_sent = sum(Number_Cautioned_Sentenced))
+
+
+rest_data <- custody_data %>%
+  filter(Caution_or_sentence_type %in% c("Referral Order", "Youth Conditional Caution", "Youth Rehabilitation Order", "Conditional Discharge", "Compensation Order", "Reparation Order") ) %>%
+  group_by(Financial_Year) %>%
+  summarise(tot_rest = sum(tot_caut_sent))
+
+
+
+
+custody_plot2 <- ggplot(custody_data, aes(x = Financial_Year, y = tot_caut_sent)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~Caution_or_sentence_type) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+
+custody_plot2
 ##where is children on remand data? only national and yearly.
 ##so if this is the case then i might have to construct yearly average probabilities of remand into bail, custody, whatever
 ##and then apply these to the (hopefully) local numbers of children getting charged in birmingham
 
+##asummarise(tot_caut_sent = sum(Number_Cautioned_Sentenced))
 
 ##SO this is phenomenally messy - come back and re-do entirely!!!!
 ##would be a good exercise in how to clean data sanely and not just in a big rush/dangerously
@@ -214,10 +251,31 @@ remand_data_19 <-  remand_data
 ## fix that.. for the moment just subset
 
 remand_data <- rbind(remand_data_19, remand_data_20, remand_data_21)
+remand_data <- remand_data[remand_data$child_characteristics == "Boys" | remand_data$child_characteristics == "Girls" | remand_data$child_characteristics == "Unknown Sex" , ]
+
+
+tot_remand <- remand_data %>%
+  group_by(year) %>%
+  summarise(tot_remand = sum(number_remands))
+
+rem_type <- remand_data %>%
+  group_by(year, `Remand type`) %>%
+  summarise(rem_type = sum(number_remands))
+
+tot_rem_cus <- rem_type %>%
+  filter(`Remand type` == "Remand to Youth Detention Accommodation" )
+
+tot_rem_rest <- rem_type %>%
+  filter(`Remand type` != "Remand to Youth Detention Accommodation" & `Remand type` != "Unconditional Bail") %>%
+    group_by(year)  %>%
+      summarise(tot_rem_rest = sum(rem_type))
+
+
+
 r_sex <- remand_data[remand_data$child_characteristics == "Boys" | remand_data$child_characteristics == "Girls" | remand_data$child_characteristics == "Unknown Sex" , ]
 
 
-remand_plot <- ggplot(r_sex, aes(x = year, y = number_remands, fill = remand_groups)) +
+remand_plot <- ggplot(remand_data, aes(x = year, y = number_remands, fill = remand_groups)) +
   geom_bar(stat = "identity") +
   theme(axis.text.x=element_text(angle = -90, hjust = 0))
 
