@@ -292,19 +292,36 @@ remand_plot
 ##Average monthly youth custody population by region of home Youth Justice Service
 ## and legal basis for detention (under 18s only), years ending March 2012 to 2021
 
-custody_data <- read_xlsx("/Users/katehayes/temp_data/Ch 7 - Children in youth custody.xls", sheet = 22, skip = 3, n_max = 48)
 
+
+
+custody_data <- read_xlsx("/Users/katehayes/temp_data/Ch 7 - Children in youth custody.xls", sheet = 22, skip = 3, n_max = 48)
 colnames(custody_data)[2] <- "region_home_yjs"
 
 custody_data <- custody_data %>%
-  mutate(`Legal basis` = vec_fill_missing(`Legal basis`, direction = c("down"))) ## i like this
+  mutate(`Legal basis` = vec_fill_missing(`Legal basis`, direction = c("down"))) %>% ## i like this
+      filter(region_home_yjs == "West Midlands")  %>%
+        pivot_longer(starts_with("20"),
+                     names_to="year",
+                     values_to="number_in_custody")
 
-custody_data <- custody_data[!is.na(custody_data$region_home_yjs), ]
 
-custody_data <- custody_data %>%
-  pivot_longer(starts_with("20"),
-               names_to="year",
-               values_to="number_in_custody")
+cust_remand <- custody_data %>%
+  filter(`Legal basis` == "Remand")  %>%
+    group_by(year) %>%
+      summarise(cust_remand = sum(number_in_custody))
+
+cust_sentence <- custody_data %>%
+  filter(`Legal basis` != "Remand")  %>%
+  group_by(year) %>%
+  summarise(cust_sentence = sum(number_in_custody))
+
+##custody_data <- custody_data[!is.na(custody_data$region_home_yjs), ]
+
+##custody_data <- custody_data %>%
+##pivot_longer(starts_with("20"),
+##names_to="year",
+##values_to="number_in_custody")
 
 custody_plot <- ggplot(custody_data[custody_data$region_home_yjs == "West Midlands", ], aes(x = year, y = number_in_custody, fill = `Legal basis`)) +
   geom_bar(position = "dodge", stat = "identity") +
@@ -420,13 +437,13 @@ colnames(custody_time_data2)[5] <- "2021"
 custody_time_data2 <- custody_time_data2 %>%
   mutate(legal_basis = vec_fill_missing(legal_basis, direction = c("down")))
 
-custody_time_data2 <- custody_time_data2[!is.na(custody_time_data[2]), ]
+custody_time_data2 <- custody_time_data2[!is.na(custody_time_data2[2]), ]
 
 custody_time_data2 <- custody_time_data2 %>%
   pivot_longer(starts_with("20"),
                names_to="year",
-               values_to="number_in_timespan")
-
+               values_to="number_in_timespan") %>%
+  filter(number_nights == "Median number of nights")
 
 
 
