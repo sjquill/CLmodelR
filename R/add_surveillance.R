@@ -253,10 +253,6 @@ child_recr = odin::odin({
   deriv(J_3[]) <-
   deriv(JCL_3[]) <- prosecute*W_3[i] - release*JCL_3[i] - mortality*JCL_3[i]
 
-  #test of key CL dynamics
-  test_prev_CL[] <- W[i]/N[i]
-  test_incarcerated[] <- J[i]
-
 
   #making the mixing matrix help
   ##first, weird mixing bits for recruitment that you'll probably need to take out later
@@ -279,6 +275,17 @@ child_recr = odin::odin({
   mix1_r[,] <- prop1_r[i]*x[j,i]
   mix2_r[,] <- prop2_r[i]*x[j,i]
   mix3_r[,] <- prop3_r[i]*x[j,i]
+
+
+  #tests - replicates known/observable CL dynamcis/ policing/CJS attributes?
+  #for example 40% of the total prison population should be remands
+
+
+
+
+
+  test_prev_CL[] <- W[i]/N[i]
+  test_incarcerated[] <- J[i]
 
 
   ##generated quantities
