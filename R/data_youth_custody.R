@@ -58,57 +58,96 @@ library(vctrs)
 ##figure out what the good practise is about installing and loading packages
 ##leaving them in the code or not... also, loading tidyverse vs loading its consitutent parts
 
-##coming here from local level open data, outcomes table
-##children sentenced to custody in birmingham, yearly, 2013/14 t0 2020/21
-custody_data <- read_ods("/Users/katehayes/temp_data/Outcome_table.ods", sheet = 3)
 
-custody_plot <- ggplot(custody_data[custody_data$YJS == "Birmingham" & custody_data$Caution_or_sentence_tier == "Custody", ], aes(x = Financial_Year, y = Number_Cautioned_Sentenced, fill = Caution_or_sentence_type)) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+################################################################################################################################
+################################################################################################################################
+############clocal level open data, outcomes table###############################
+################################################################################################################################
+##children sentenced and cautioned in birmingham, yearly, financial year 2013/14 to 2020/21
 
-custody_plot
+#read in the data
+caut_sent_data <- read_ods("/Users/katehayes/temp_data/Outcome_table.ods", sheet = 3)
 
-custody_data <- custody_data[,1:8]
+##ok for my model groupings i need to separate out custody and 'restrictions'
+##define restrictions as:
+    ##compensation, conditional discharge, referral order, youth conditional caution, youth rehabilitation order
 
-custody_group_data <- custody_data %>%
+##drop the NA column at the end, keep only Birmingham, drop also any columns i dont want
+caut_sent_data <- caut_sent_data[,1:8] %>%
   filter(YJS == "Birmingham") %>%
-  group_by(Financial_Year, Caution_or_sentence_type, Caution_or_sentence_tier) %>%
-  summarise(tot_caut_sent = sum(Number_Cautioned_Sentenced))
+    group_by(Financial_Year, Caution_or_sentence_type, Caution_or_sentence_tier) %>%
+      summarise(Number_Cautioned_Sentenced = sum(Number_Cautioned_Sentenced))
 
-cust_data <- custody_group_data %>%
-  filter(Caution_or_sentence_tier == "Custody") %>%
+total <- caut_sent_data  %>%
+group_by(Financial_Year) %>%
+summarise(Number_Cautioned_Sentenced = sum(Number_Cautioned_Sentenced))
+
+##separate out custody
+cust_data <- caut_sent_data %>%
+  filter(Caution_or_sentence_tier == "Custody")
+
+cust_data$Caution_or_sentence_type <- factor(cust_data$Caution_or_sentence_type, levels = c("Section 226b", "Section 90-91 Detention", "Detention and Training Order"))
+
+cust_plot <- cust_data %>%
+      ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced, fill = Caution_or_sentence_type)) +
+      geom_bar(stat = "identity") +
+      theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+cust_plot
+
+
+
+##separate out restricted
+rest_data <- caut_sent_data %>%
+  filter(Caution_or_sentence_type %in% c("Referral Order", "Youth Conditional Caution", "Youth Rehabilitation Order", "Conditional Discharge", "Compensation Order", "Reparation Order"))
+
+
+sum_rest_data <- rest_data %>%
   group_by(Financial_Year) %>%
-    summarise(tot_cust = sum(tot_caut_sent))
-
-##ok for my model groupings i need custody, i also need
-##compensation, conditional discharge, referral order, youth conditional caution, youth rehabilitation order as restricted
-
-custody_data <- custody_data %>%
-                  filter(YJS == "Birmingham") %>%
-                    group_by(Financial_Year, Caution_or_sentence_type) %>%
-                      summarise(tot_caut_sent = sum(Number_Cautioned_Sentenced))
+    summarise(Number_Cautioned_Sentenced = sum(Number_Cautioned_Sentenced))
 
 
-rest_data <- custody_data %>%
-  filter(Caution_or_sentence_type %in% c("Referral Order", "Youth Conditional Caution", "Youth Rehabilitation Order", "Conditional Discharge", "Compensation Order", "Reparation Order") ) %>%
-  group_by(Financial_Year) %>%
-  summarise(tot_rest = sum(tot_caut_sent))
-
-
-
-
-custody_plot2 <- ggplot(custody_data, aes(x = Financial_Year, y = tot_caut_sent)) +
+rest_plot <- rest_data %>%
+  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced)) +
   geom_bar(stat = "identity") +
   facet_wrap(~Caution_or_sentence_type) +
   theme(axis.text.x=element_text(angle = -90, hjust = 0))
 
+rest_plot
 
-custody_plot2
+rest_plot2 <- rest_data %>%
+  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced, fill = Caution_or_sentence_type)) +
+  geom_bar(stat = "identity", position = "fill") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+rest_plot2
+##referral orders are getting more popular, rehavilitation orders less
+
+
+sum_rest_plot <- sum_rest_data %>%
+  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+sum_rest_plot
+
+##SO we have numbers of children sentenced and cautioned
+## or in model terms, sentenced to custody or restricted, in birmingham yearly
+##additionally it would be useful to know how long each type of caution/sentence lasts
+##ideally at the birmingham or west midlands level, but county-level if necessary
+
+##here are the median figures for 2019 and 2020, at total country level:
+#DTO - 91.50
+#Other -292.25
+#Remand - 41.00
+################################################################################################################################
+################################################################################################################################
+################################################################################################################################
+
+
 ##where is children on remand data? only national and yearly.
 ##so if this is the case then i might have to construct yearly average probabilities of remand into bail, custody, whatever
 ##and then apply these to the (hopefully) local numbers of children getting charged in birmingham
-
-##asummarise(tot_caut_sent = sum(Number_Cautioned_Sentenced))
 
 ##SO this is phenomenally messy - come back and re-do entirely!!!!
 ##would be a good exercise in how to clean data sanely and not just in a big rush/dangerously
@@ -286,13 +325,10 @@ remand_plot
 ##################CHILDREN PROCEEDED AGAINST######################################
 ##in the youth justice statistics supplementaries you can get children proceeded against in magistrates court
 
-
 ################# Average monthly youth custody population by legal basis for detention######################################
 ##in the youth justice statistics supplementaries chapter 7 , sheet 7.21, at west midlands level
 ##Average monthly youth custody population by region of home Youth Justice Service
 ## and legal basis for detention (under 18s only), years ending March 2012 to 2021
-
-
 
 
 custody_data <- read_xlsx("/Users/katehayes/temp_data/Ch 7 - Children in youth custody.xls", sheet = 22, skip = 3, n_max = 48)
@@ -300,34 +336,58 @@ colnames(custody_data)[2] <- "region_home_yjs"
 
 custody_data <- custody_data %>%
   mutate(`Legal basis` = vec_fill_missing(`Legal basis`, direction = c("down"))) %>% ## i like this
-      filter(region_home_yjs == "West Midlands")  %>%
+  filter(region_home_yjs == "West Midlands") %>%
+  mutate(rem_cus = if_else(`Legal basis` == "Remand", "Remand", "Sentenced")) %>%
         pivot_longer(starts_with("20"),
                      names_to="year",
                      values_to="number_in_custody")
 
 
-cust_remand <- custody_data %>%
-  filter(`Legal basis` == "Remand")  %>%
-    group_by(year) %>%
-      summarise(cust_remand = sum(number_in_custody))
 
-cust_sentence <- custody_data %>%
-  filter(`Legal basis` != "Remand")  %>%
-  group_by(year) %>%
-  summarise(cust_sentence = sum(number_in_custody))
 
-##custody_data <- custody_data[!is.na(custody_data$region_home_yjs), ]
-
-##custody_data <- custody_data %>%
-##pivot_longer(starts_with("20"),
-##names_to="year",
-##values_to="number_in_custody")
-
-custody_plot <- ggplot(custody_data[custody_data$region_home_yjs == "West Midlands", ], aes(x = year, y = number_in_custody, fill = `Legal basis`)) +
-  geom_bar(position = "dodge", stat = "identity") +
+##making plots to visualise
+rvs_plot <- custody_data %>%
+  ggplot(aes(x = year, y = number_in_custody, fill = rem_cus)) +
+  geom_bar(stat = "identity", position = "dodge") +
   theme(axis.text.x=element_text(angle = -90, hjust = 0))
 
-custody_plot
+rvs_plot
+
+rvs_plot2 <- custody_data %>%
+  ggplot(aes(x = year, y = number_in_custody, fill = rem_cus)) +
+  geom_bar(stat = "identity", position = "fill") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+rvs_plot2
+
+
+remand_plot <- custody_data %>%
+  filter(`Legal basis` == "Remand") %>%
+    ggplot(aes(x = year, y = number_in_custody)) +
+    geom_bar(stat = "identity") +
+    theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+remand_plot
+
+sent_cust_plot <- custody_data %>%
+  filter(`Legal basis` != "Remand") %>%
+  ggplot(aes(x = year, y = number_in_custody, fill = `Legal basis`)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+sent_cust_plot
+#basically remand comes down then goes back up, while total sentenced coming down, mostly due to drop in DTOs
+
+#just computing the total numbers
+remand_data <- custody_data %>%
+  filter(`Legal basis` == "Remand")  %>%
+    group_by(year) %>%
+      summarise(number_in_custody = sum(number_in_custody))
+
+sent_cust_data <- custody_data %>%
+  filter(`Legal basis` != "Remand")  %>%
+  group_by(year) %>%
+  summarise(number_in_custody = sum(number_in_custody))
 
 ################# Average monthly youth custody population by ethnicty######################################
 ##in the youth justice statistics supplementaries chapter 7 , sheet 7.20, at west midlands level
@@ -403,7 +463,11 @@ custody_age_plot
 
 
 ################# time in custody######################################
-##Table 7.32: Legal basis episodes ending by Youth Justice Service region(1) and nights, years ending March 2019 to 2021
+##Table 7.32: Legal basis episodes ending by Youth Justice Service region and nights, years ending March 2019 to 2021
+##so we also get total episodes ending each year??
+
+##i have no idea why this particular year only goes to 2019 since other years go back way further - change the sheet you're reading
+
 
 custody_time_data <- read_xlsx("/Users/katehayes/temp_data/Ch 7 - Children in youth custody.xls", sheet = 33, skip = 3, n_max = 71)
 custody_time_data <- custody_time_data[,1:5]
@@ -414,7 +478,8 @@ colnames(custody_time_data)[4] <- "2020"
 colnames(custody_time_data)[5] <- "2021"
 
 custody_time_data <- custody_time_data %>%
-  mutate(region_home_yjs = vec_fill_missing(region_home_yjs, direction = c("down")))
+  mutate(region_home_yjs = vec_fill_missing(region_home_yjs, direction = c("down"))) %>%
+  filter(region_home_yjs == "West Midlands")
 
 custody_time_data <- custody_time_data[!is.na(custody_time_data[2]), ]
 
@@ -422,6 +487,20 @@ custody_time_data <- custody_time_data %>%
   pivot_longer(starts_with("20"),
                names_to="year",
                values_to="number_in_timespan")
+
+
+cust_time_plot <- custody_time_data %>%
+  filter(number_nights != "Total", number_nights != "Median number of nights") %>%
+  ggplot(aes(x = number_nights, y = number_in_timespan)) +
+  facet_wrap(~year) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+  cust_time_plot
+
+  (45*173+((182-92)/2)*68+((273-183)/2)*34+330*55)/330
+  #its 92.5, so i obv guessed everything here but mayeb 90 as mean days makes sense
+  ##this is remand PLUS sentenced to custody
 
 #####this one requires more careful thinking about how to graph
 
@@ -439,11 +518,14 @@ custody_time_data2 <- custody_time_data2 %>%
 
 custody_time_data2 <- custody_time_data2[!is.na(custody_time_data2[2]), ]
 
+###getting averages, leaving out 21 bc it was weird
 custody_time_data2 <- custody_time_data2 %>%
   pivot_longer(starts_with("20"),
                names_to="year",
                values_to="number_in_timespan") %>%
-  filter(number_nights == "Median number of nights")
+  filter(number_nights == "Median number of nights", year != "2021") %>%
+  group_by(legal_basis) %>%
+  summarise(median = mean(number_in_timespan))
 
 
 

@@ -217,39 +217,42 @@ child_recr = odin::odin({
   ##so we've got TriED and then sen_cust (90 kids in birmingham per year) and CHARGED and then rem_cust
   ##and we've got TriED and then sen_rest (880 kids per year) and CHARGED and then rem_rest
   ##differential equations - INCLUSION
-
+  ##univolved
   deriv(U_1[]) <- births_1[i] + desist*W_1[i] + d*h[i]*W_1[i] - surveil_i*U_1[1] - contact*recruit_1[i]*U_1[i]*sum(mix1_r[,i]) - mortality*U_1[i]
   deriv(US_1[]) <- surveil_i*U_1[1] + (1-ss_arrest)*ss_i[i]*U_1[i] + (1-red)*release*JCL_1[i] - contact*recruit_1[i]*US_1[i]*sum(mix1_r[,i])
   deriv(UR_1[]) <- ss_arrest*ss_i[i]* + arrest_i[i]*US_1[i] - - contact*recruit_1[i]*UR_1[i]*sum(mix1_r[,i])
-
+  ##working
   deriv(W_1[]) <- contact*recruit_1[i]*U_1[i]*sum(mix1_r[,i]) - surveil_i*W_1[1] - arrest*W_1[i] - desist*W_1[i] - mortality*W_1[i] - missing*W_1[i]
   deriv(WS_1[]) <- surveil_i*W_1[1] + contact*recruit_1[i]*US_1[i]*sum(mix1_r[,i]) + missing*W_1[i] + arrest_i[i]*W_1[i] + red*release*JCL_1[i]
   deriv(WR_1[]) <-contact*recruit_1[i]*UW_1[i]*sum(mix1_r[,i]) +
-
-  deriv(J_1[]) <-
+  ##jailed (remand and sentenced)
+  deriv(JR_1[]) <-
   deriv(JCL_1[]) <- prosecute*W_1[i] - release*JCL_1[i] - mortality*JCL_1[i]
 
+
   ##differential equations - EXCLUSION
+  ##univolved
   deriv(U_2[]) <- births_2[i] + desist*W_2[i] + d*h[i]*W_2[i] - surveil_e*U_2[1] - contact*recruit_2[i]*U_2[i]*sum(mix2_r[,i]) - mortality*U_2[i]
   deriv(US_2[]) <- surveil_e*U_2[1] + ss_e[i]*U_2[i] + arrest_e[i]*U_2[i] + (1-red)*release*JCL_2[i] - contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i])
   deriv(UR_2[]) <- - contact*recruit_2[i]*UW_2[i]*sum(mix2_r[,i])
-
+  ##working
   deriv(W_2[]) <- contact*recruit_2[i]*U_2[i]*sum(mix2_r[,i]) - surveil_e*W_2[1] - arrest*W_2[i] - desist*W_2[i] - missing*W_2[i] - mortality*W_2[i]
   deriv(WS_2[]) <- surveil_e*W_2[1] + contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i]) + missing*W_2[i] + arrest_e[i]*W_2[i] + red*release*JCL_2[i]
   deriv(WR_2[]) <- contact*recruit_2[i]*UW_2[i]*sum(mix2_r[,i]) +
-
+  ##jailed (remand and sentenced)
   deriv(J_2[]) <-
   deriv(JCL_2[]) <- prosecute*W_2[i] - release*JCL_2[i] - mortality*JCL_2[i]
 
   ##differential equations - CLOSE PROXIMITY
+  ##univolved
   deriv(U_3[]) <- births_3[i] + desist*W_3[i] + d*h[i]*W_3[i] - surveil_c*U_3[1] - contact*recruit_3[i]*U_3[i]*sum(mix3_r[,i]) - mortality*U_3[i]
   deriv(US_3[]) <- surveil_c*U_3[1] + arrest_c[i]*U_3[i] + (1-red)*release*JCL_3[i] - contact*recruit_3[i]*US_3[i]*sum(mix3_r[,i])
   deriv(UR_3[]) <- - contact*recruit_3[i]*UR_3[i]*sum(mix3_r[,i])
-
+  ##working
   deriv(W_3[]) <- contact*recruit_3[i]*U_3[i]*sum(mix3_r[,i]) - surveil_c*W_3[1] - arrest*W_3[i] - desist*W_3[i] - missing*W_3[i] - mortality*W_3[i]
   deriv(WS_3[]) <- surveil_c*W_3[1] + contact*recruit_3[i]*US_3[i]*sum(mix3_r[,i]) + missing*W_3[i] + arrest_c[i]*W_3[i] + red*release*JCL_3[i]
   deriv(WR_3[]) <- contact*recruit_3[i]*UR_3[i]*sum(mix3_r[,i]) +
-
+  ##jailed (remand and sentenced)
   deriv(J_3[]) <-
   deriv(JCL_3[]) <- prosecute*W_3[i] - release*JCL_3[i] - mortality*JCL_3[i]
 
