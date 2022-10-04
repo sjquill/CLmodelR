@@ -44,6 +44,37 @@ ss16_outcome_data <- read.csv("/Users/katehayes/temp_data/stop-search-open-data-
 
 ##NOTE!! this is weighted data - some rows are weighted bc that same combo has been observed multiple times
 
+
+ss21_data <- ss21_data %>%
+  filter(police_force_area == "West Midlands")
+
+ss_sum_data <- ss21_data %>%
+  filter(age_group == "10-17", gender != "Unknown") %>%
+  group_by(gender, outcome) %>%
+  summarise(tot = sum(number_of_searches))
+
+drug_ss_data <- ss21_data %>%
+  filter(age_group == "10-17", gender != "Unknown", reason_for_search == "Drugs", link == "Linked") %>%
+  group_by(gender, outcome) %>%
+  summarise(tot = sum(number_of_searches))
+
+
+plot1 <- ss21_data %>%
+  filter(age_group == "10-17", gender != "Unknown", outcome == "Seizure of Property") %>%
+  group_by(financial_year_quarter) %>%
+  ggplot(aes(x = reason_for_search, y = number_of_searches)) +
+  facet_wrap(~gender) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+plot1
+
+
+ss_drug <- ss21_data %>%
+  filter(age_group == "10-17", gender != "Unknown", outcome == "Seizure of Property", reason_for_search == "Drugs") %>%
+  group_by(gender) %>%
+  summarise(tot = sum(number_of_searches))
+
 ss21_data <- ss21_data[ , !names(ss21_data) %in% c("geocode")]
 
 

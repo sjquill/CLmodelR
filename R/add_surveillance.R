@@ -281,9 +281,9 @@ child_recr = odin::odin({
 
 
   #tests - replicates known/observable CL dynamcis/ policing/CJS attributes?
-  #for example 40% of the total prison population should be remands
-
-
+  #for example 25% of the total prison population should be remands
+  #also, 55% percent of cautions/sentences are of first time entrants to the CSJ
+  #what about girl v boy dynamics....
 
 
 

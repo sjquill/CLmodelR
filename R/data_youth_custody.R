@@ -528,4 +528,163 @@ custody_time_data2 <- custody_time_data2 %>%
   summarise(median = mean(number_in_timespan))
 
 
+################# little extra pieces of detail######################################
+##Chapter 2: First time entrants to the Youth Justice System########################
+##Table 2.9: Numbers of child first time entrants(1)(2), by Local Authority of residence, years ending December 2010 to 2020
+first_time_data <- read_xlsx("/Users/katehayes/temp_data/Ch 2 - First time entrants to the youth justice system.xls", sheet = 10, skip = 3, n_max = 199)
+
+first_time_data <- first_time_data %>%
+  filter(`Local Authority` == "Birmingham") %>%
+  pivot_longer(starts_with("20"),
+               names_to="year",
+               values_to="ft_entrants")
+
+first_time_plot <- first_time_data %>%
+  ggplot(aes(x = year, y = ft_entrants)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+first_time_plot
+#note: i checked this against total cautions/sentences in Birmingham and it is rising - was 40% in 2013 and is now 60%
+
+#Table 2.4: Number of child first time entrants(1)(2) by sex and type of disposal given on first offence, years ending March 2011 to 2021
+#THIS IS NOT GOING WELL LOL
+
+first_cs_data <- read_xlsx("/Users/katehayes/temp_data/Ch 2 - First time entrants to the youth justice system.xls", sheet = 5, skip = 4, n_max = 38)
+first_cs_data <- first_cs_data[,1:8]
+colnames(first_cs_data)[1] <- "year"
+colnames(first_cs_data)[2] <- "youth_caution"
+
+first_cs_data_g <- first_cs_data[28:38,] %>%
+  mutate(sex = "female")
+
+first_cs_data_b <- first_cs_data[15:25,] %>%
+  mutate(sex = "male")
+
+first_cs_data <- rbind(first_cs_data_g, first_cs_data_b)
+first_cs_data$youth_caution <- as.numeric(first_cs_data$youth_caution)
+
+first_cs_data <- first_cs_data %>%
+  pivot_longer(youth_caution:`Other(4)`,
+               names_to="sentence_caution_type",
+               values_to="ft_entrants")
+
+
+first_cs_plot <- first_cs_data %>%
+  filter(sentence_caution_type == "Community sentence") %>%
+  ggplot(aes(x = year, y = ft_entrants, fill = sex)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+
+first_cs_plot <- first_cs_data %>%
+  filter(sentence_caution_type == "youth_caution") %>%
+  ggplot(aes(x = year, y = ft_entrants, fill = sex)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+first_cs_plot <- first_cs_data %>%
+  filter(sentence_caution_type == "Immediate custody") %>%
+  ggplot(aes(x = year, y = ft_entrants, fill = sex)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+  first_cs_plot
+
+first_cs_pc <- first_cs_data %>%
+  group_by(sex) %>%
+  mutate(tot = sum(ft_entrants)) %>%
+  group_by(sex, sentence_caution_type) %>%
+  mutate(pc = sum(ft_entrants)/tot)
+
+#this doesnt quite work lol....
+
+#data %>%
+#group_by(month) %>%
+#mutate(per =  100 *count/sum(count)) %>%
+#ungroup
+
+pc_plot <- first_cs_pc %>%
+  filter(year == "2021") %>%
+  ggplot(aes(x = sentence_caution_type, y = pc)) +
+  facet_wrap(~sex) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+pc_plot
+
+#female first time entrants - 80% are youth caution, 15% are community sentence, 0.3% are immediate custody, 2% are conditional discharge
+#male first time entrants - 70% are youth caution, 25% community sentence, 1.5% immediate custody, 2% conditional discharge
+
+#Table 2.2: Number of chid first time entrants(1)(2), by type of first offence and sex, years ending March 2011 to 2021
+
+first_offence_data <- read_xlsx("/Users/katehayes/temp_data/Ch 2 - First time entrants to the youth justice system.xls", sheet = 3, skip = 3, n_max = 53)
+first_offence_data <- first_offence_data[,1:13]
+colnames(first_offence_data)[1] <- "year"
+
+
+first_offence_data_g <- first_offence_data[29:39,] %>%
+  mutate(sex = "female")
+
+first_offence_data_b <- first_offence_data[16:26,] %>%
+  mutate(sex = "male")
+
+first_offence_data <- rbind(first_offence_data_g, first_offence_data_b)
+
+first_offence_data$`Violence against the person` <- as.numeric(first_offence_data$`Violence against the person`)
+
+
+first_offence_data <- first_offence_data %>%
+  pivot_longer(`Violence against the person`:`Summary motoring offences`,
+               names_to="offence_type",
+               values_to="ft_entrants")
+
+
+#ok so this is the average across the years
+first_offence_pc <- first_offence_data %>%
+  group_by(sex) %>%
+  mutate(count = sum(ft_entrants)) %>%
+  group_by(offence_type, .add = TRUE) %>%
+  mutate(pc = sum(ft_entrants)/count)
+
+pc2_plot <- first_offence_pc %>%
+  filter(year == "2021") %>%
+  ggplot(aes(x = offence_type, y = pc)) +
+  facet_wrap(~sex) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+pc2_plot
+
+#obut now year by year?
+
+pc3_plot <- first_offence_pc %>%
+  group_by(sex, year) %>%
+  mutate(count = sum(ft_entrants)) %>%
+  group_by(offence_type, .add = TRUE) %>%
+  mutate(pc = sum(ft_entrants)/count) %>%
+  ggplot(aes(x = year, y = pc, fill = sex)) +
+  facet_wrap(~offence_type) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+pc3_plot
+
+#for first time entrants, percentage by offence
+#possession of weapons growing for both girls & boys
+#average across last few years is 3% girl 8% boy
+
+#drug offenses pretty steady, maybe growth in boys
+# av girl 5% boy 13%
+
+#violence against the persson increasing in both but more sharply in girls
+#av girl 4% boy 5%
+
+#boys commit relatively more drug and weapon offenses (even as they commit many more in absolute terms)
+
+################################################################################################
+########Chapter 9: Proven reoffending by children in England and Wales########################
+#Can do time to reoffending, reoddending by disposal, by offence, by the young offenders institue you were in (think about which one birmingham kids are sent to)
+######Table 9.7: Proven reoffending data for children in England and Wales by index disposal(1),  years ending March 2010 to 2020 and quarters for the year ending March 2020
+
 
