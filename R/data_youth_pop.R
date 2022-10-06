@@ -14,6 +14,20 @@ pop_plot <- ggplot(pop_df, aes(x = age, y = population, fill = gender)) +
   theme(axis.text.x=element_text(angle = -90, hjust = 0))
 
 
+pop_age <- pop_df %>%
+  filter(year %in% seq(2016, 2020), age %in% c("Age 10", "Age 11", "Age 12", "Age 13", "Age 14", "Age 15", "Age 16", "Age 17")) %>%
+  group_by(gender, age) %>%
+  summarise(av = mean(population)) %>%
+  ungroup() %>%
+  group_by(gender) %>%
+  mutate(av_single_year = mean(av))
+
+age_plot <- pop_age %>%
+  ggplot(aes(x = age, y = av, fill = gender)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+
+age_plot
 
 pop <- pop_df %>%
     filter(year %in% seq(2016, 2020), age %in% c("Age 10", "Age 11", "Age 12", "Age 13", "Age 14", "Age 15", "Age 16", "Age 17") ) %>%

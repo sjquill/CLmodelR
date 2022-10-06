@@ -12,10 +12,19 @@ arrest_data <- arrest_data %>%
 arrest_data$Arrests <- as.numeric(arrest_data$Arrests)
 
 arrest_plot <- ggplot(arrest_data, aes(x = Financial.Year, y = Arrests, fill = Reason.for.arrest..offence.group.)) +
-  geom_bar(stat = "identity", position = "fill") +
+  geom_bar(stat = "identity") +
   facet_wrap(~Gender)
 
 arrest_plot
+
+arrest_sum <- arrest_data %>%
+  group_by(Financial.Year, Gender, Reason.for.arrest..offence.group.) %>%
+  summarise(Arrests = sum(Arrests)) %>%
+  ungroup() %>%
+  group_by(Gender, Reason.for.arrest..offence.group.) %>%
+  summarise(tot_arrests = mean(Arrests))
+
+
 
 cl_arrest_data <- arrest_data %>%
   filter(Reason.for.arrest..offence.group. %in% c("2015/16 onwards - Drug offences", "2015/16 onwards - Possession of weapons offences", "2015/16 onwards - Violence against the person"))
