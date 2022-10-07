@@ -670,9 +670,9 @@ pars <- list(x = rbind(c(0.8, 0.2), #first row is group 1's mixing group 1,2,3,4
              fte2 = c(0.0003351652,0.0001170569), #some kind of rate of excluded first time entrants
              fte3 = c(0.001219093,0.001214229), #some kind of rate of close first time entrants total (should work out as like 600 a year, 23% female 77% male)
              rep = c(0.002,0.001), #some kind of rate of repeated offences (should work out as like 452
-             school_ex_i = c(0.009615385,0.004807692), #rc(0,0),#ates of school exclusion, included
-             school_ex_e = c(0.05769231,0.01923077), #c(0,0),
-             impov = 0.0003205128, #pretty steep impoverishment rate of like 1 pc of pop a year or something like that?
+             school_ex_i = c(0.0009615385,0.0004807692), #rc(0,0),#ates of school exclusion, included
+             school_ex_e = c(0.005769231,0.001923077), #c(0,0),
+             impov = 0.003, # 0.0003205128 pretty steep impoverishment rate of like 1 pc of pop a year or something like that?
              u1_out = c(0,0),  #percentage of exiters leaving from this state, boy and girl
              us1_out = c(0,0),
              ur1_out = c(0,0),
@@ -750,31 +750,6 @@ ggplot(data = close_data) +
   geom_line(mapping = aes(x=t, y=W_3.1.), color = "blue") +
   geom_line(mapping = aes(x=t, y=U_3.2.), color = "orange") +
   geom_line(mapping = aes(x=t, y=W_3.2.), color = "green")+
-  geom_line(mapping = aes(x=t, y=J_3.1.+JR_3.1.), color = "purple") +
-  geom_line(mapping = aes(x=t, y=J_3.2.+JR_3.2.), color = "pink")
-
-
-ggplot(data = incl_data) +
-  geom_line(mapping = aes(x=t, y=S_1.1.), color = "red") +
-  geom_line(mapping = aes(x=t, y=R_1.1.), color = "blue") +
-  geom_line(mapping = aes(x=t, y=S_1.2.), color = "orange") +
-  geom_line(mapping = aes(x=t, y=R_1.2.), color = "green")+
-  geom_line(mapping = aes(x=t, y=J_1.1.+JR_1.1.), color = "purple") +
-  geom_line(mapping = aes(x=t, y=J_1.2.+JR_1.2.), color = "pink")
-
-ggplot(data = excl_data) +
-  geom_line(mapping = aes(x=t, y=S_2.1.), color = "red") +
-  geom_line(mapping = aes(x=t, y=R_2.1.), color = "blue") +
-  geom_line(mapping = aes(x=t, y=S_2.2.), color = "orange") +
-  geom_line(mapping = aes(x=t, y=R_2.2.), color = "green")+
-  geom_line(mapping = aes(x=t, y=J_2.1.+JR_2.1.), color = "purple") +
-  geom_line(mapping = aes(x=t, y=J_2.2.+JR_2.2.), color = "pink")
-
-ggplot(data = close_data) +
-  geom_line(mapping = aes(x=t, y=S_3.1.), color = "red") +
-  geom_line(mapping = aes(x=t, y=R_3.1.), color = "blue") +
-  geom_line(mapping = aes(x=t, y=S_3.2.), color = "orange") +
-  geom_line(mapping = aes(x=t, y=R_3.2.), color = "green")+
   geom_line(mapping = aes(x=t, y=J_3.1.+JR_3.1.), color = "purple") +
   geom_line(mapping = aes(x=t, y=J_3.2.+JR_3.2.), color = "pink")
 
