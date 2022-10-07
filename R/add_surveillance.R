@@ -3,19 +3,10 @@ library(odin)
 library(ggplot2)
 
 child_recr = odin::odin({
-  ##two mixing matrices - one for recruitment thats strongly assortative
-  ##and the other for harm that's very close to random
-  ##the mixing part for recruitment goes over N because its about the total population whereas
-  ##the one for harm goes over (w+H) because its only about those
-
-  ##actually the two different splits - leading to a 3 dimensional array - i dont think that would work
-
-
   ##TIME STEPS IS WEEKS
 
   ##number of social/ gender classes
   N_gender <- user(2)
-
 
   #kids coming in - total 7336 girls and 7842 boys yearly - so 141 girls and 151 boys weekly
   #they come in in a block and then we send them to their states by dividing up percentages
@@ -38,6 +29,8 @@ child_recr = odin::odin({
   wr1_out[] <- user(0)
   j1_out[] <- user(0)
   jr1_out[] <- user(0)
+  jw1_out[] <- user(0)
+  jrw1_out[] <- user(0)
   u2_out[] <- user(0)
   us2_out[] <- user(0)
   ur2_out[] <- user(0)
@@ -46,6 +39,8 @@ child_recr = odin::odin({
   wr2_out[] <- user(0)
   j2_out[] <- user(0)
   jr2_out[] <- user(0)
+  jw2_out[] <- user(0)
+  jrw2_out[] <- user(0)
   u3_out[] <- user(0)
   us3_out[] <- user(0)
   ur3_out[] <- user(0)
@@ -54,9 +49,11 @@ child_recr = odin::odin({
   wr3_out[] <- user(0)
   j3_out[] <- user(0)
   jr3_out[] <- user(0)
+  jw3_out[] <- user(0)
+  jrw3_out[] <- user(0)
 
   ## parameters values - default in parentheses - timestep is weekly? lets try weekly
-  alpha <- user(1) #changes degree of assortativity in mixing across social classes (1 -> infinity = totally assortative -> totally proportional)
+  alpha <- user(1.5) #changes degree of assortativity in mixing across social classes ('1 -> infinity' is equiv to 'totally assortative -> totally proportional')
   x[,] <- user(0)
 
 
@@ -68,32 +65,40 @@ child_recr = odin::odin({
   recruit_j[] <- user(0.005) #recruitment per contact? in jail - you need 200 contacts|?
 
   #d <- user(0.05) #probability of desisting at a critical point eg hospitalisation after an injury
-  desist <- user(0.005) #probability of desisting at other times
+  desist <- user(0.001) #probability of desisting at other times
 
-  arrest <- user(0.02) #rate of arrest bc of county lines involvement for the working group
-  #lets say i want them working about 1 year, so 52 time steps, so 1/52
+  #arrest <- user(0.02) #rate of arrest bc of county lines involvement for the working group
 
+  missing_i[] <- user(0) #rate of missing episodes for the included group
+  missing_e[] <- user(0.005) #rate of missing episodes for the excluded group
+  missing_c[] <- user(0.005) #rate of missing episodes for the close group
 
-  surv_rate <- user(0.002) #10pc are criminalised a year
+  ss_i[] <- user(0.005) #rate of stop&search for the included group
+  ss_e[] <- user(0.005) #rate of stop&search  for the excluded group
+  ss_c[] <- user(0.005) #rate of stop&search  for the close group
 
   # red <- user(0.637) #recidivism rate - For children released from custody in the year ending March 2020, 63.7%  re-offended
-  mortality <- user(0) #death rate from causes other than county lines
+  # mortality <- user(0) #death rate from causes other than county lines
   # h[] <- user(0.25) #rate at which people in harm group commit harm... once a monthish?
   #m <- user(0.01) #percentage of harms that are fatal (the better letter would prob be f)...1%?
-
-
 
   remand <- user(0.12) #percentage of bail episode that are remand to custody
   r2c <- user(0.33) #percentage of custody remands that result in a custodial sentence
 
-  end_rem <- user() #rate that sets the length of the average custody remand ()?
-  end_cust <- user(0.01) #rate that sets the length of the custodial  sentence ()?
+  end_rem <- user(0.175) #rate that sets the length of the average custody remand - should be 40 so 5.7 weeks, 1/5.7
+  end_cust <- user(0.05) #rate that sets the length of the custodial sentence - meant to be 139 so lets say 20 weeks, 1/20
 
-  fte[] <- user() #some kind of rate of first time entrants (should work out as like 600 a year, 23% female 77% male)
-  crim_multiplier <- user() #figure this out properly but its some sort of elevated risk of criminalisation that you get from beign already known to the police
 
-  custody_fte[] <- user() #percentage of fte's that get a custodial sentence (of men, 1.5% - of women, 0.3%)
-  custody_rep[] <- user() #percentage that get custodial sentence, of repeat offenders, who dont get remanded to custody... lol
+  surv_multiplier <- user(1.5) #figure this out properly but its some sort of elevated risk of criminalisation that you get from beign already known to the police
+  cl_multiplier <- user(1.2) #some elevated risk of going missing, getting cautioned/sentenced etc if you're working CL (20%)
+
+  fte1[] <- user(0) #some kind of rate of included first time entrants
+  fte2[] <- user(0) #some kind of rate of excluded first time entrants
+  fte3[] <- user(0) #some kind of rate of close first time entrants total (should work out as like 600 a year, 23% female 77% male)
+  rep[] <- user(0) #some kind of rate of repeated offending
+
+  custody_fte[] <- user(0.01) #percentage of fte's that get a custodial sentence (of men, 1.5% - of women, 0.3%)
+  custody_rep[] <- user(0.14) #percentage that get custodial sentence, of repeat offenders, who dont get remanded to custody... lol
 
   deter <- user(0) #rate of CL workers resolving to stop while doing a custodial sentence (note, they can be recruited back later)
 
@@ -103,18 +108,18 @@ child_recr = odin::odin({
   #dN_1_ini[] <- user(0) #total initial pop included
   #dN_2_ini[] <- user(0) #total initial pop excluded
   #d N_3_ini[] <- user(0) #total initial pop close
-  U_1_ini[] <- user(78927) #number initially uninvolved, no police contact
-  U_2_ini[] <- user(33999) #number initially uninvolved, no police contact - 93.6% of the excluded
-  U_3_ini[] <- user(0) #number initially uninvolved, no police contact - zero for close, all already flagged
+  UN_1_ini[] <- user(78927) #number initially uninvolved, no police contact
+  UN_2_ini[] <- user(33999) #number initially uninvolved, no police contact - 93.6% of the excluded
+  UN_3_ini[] <- user(0) #number initially uninvolved, no police contact - zero for close, all already flagged
   US_1_ini[] <- user(0) #number initially uninvolved, surveilled - zero for included
   US_2_ini[] <- user(2429) #number initially uninvolved, surveilled - 6.6% of the excluded
   US_3_ini[] <- user(6071) #number initially uninvolved, surveilled - 100% of the close
   UR_1_ini[] <- user(4) #number initially uninvolved, in CSJ - lets say 800 start in the CSJ (i just picked), and i split between 3
   UR_2_ini[] <- user(396) #number initially uninvolved, in CSJ
   UR_3_ini[] <- user(400) #number initially uninvolved, in CSJ
-  W_1_ini[] <- user(0) #number initially working, no police contact
-  W_2_ini[] <- user(0) #number initially working, no police contact
-  W_3_ini[] <- user(0) #number initially working, no police contact
+  WN_1_ini[] <- user(0) #number initially working, no police contact
+  WN_2_ini[] <- user(0) #number initially working, no police contact
+  WN_3_ini[] <- user(0) #number initially working, no police contact
   WS_1_ini[] <- user(0) #number initially working, surveilled
   WS_2_ini[] <- user(1) #number initially working, surveilled
   WS_3_ini[] <- user(5) #number initially working, surveilled -lets start small working & hope it takes off?
@@ -132,13 +137,12 @@ child_recr = odin::odin({
   JR_3_ini[] <- user(5.5) #number initially remanded to custody - prevalence of remand is 9.5 so just split between these
   JRW_1_ini[] <- user(0) #number of CL initially remanded to custody
   JRW_2_ini[] <- user(0) #number of CL initially remanded to custody -
-  JRW_3_ini[] <- user(0) #number of CL initially remanded to custody -
+  JRW_3_ini[] <- user(1) #number of CL initially remanded to custody -
 
 
-
-  initial(U_1[]) <- U_1_ini[i] #the old equal split for gender doesnt work bc girls are less likely to be close
-  initial(U_2[]) <- U_2_ini[i]
-  initial(U_3[]) <- U_3_ini[i]
+  initial(UN_1[]) <- UN_1_ini[i] #the old equal split for gender doesnt work bc girls are less likely to be close
+  initial(UN_2[]) <- UN_2_ini[i]
+  initial(UN_3[]) <- UN_3_ini[i]
   initial(US_1[]) <- US_1_ini[i]
   initial(US_2[]) <- US_2_ini[i]
   initial(US_3[]) <- US_3_ini[i]
@@ -146,9 +150,9 @@ child_recr = odin::odin({
   initial(UR_2[]) <- UR_2_ini[i]
   initial(UR_3[]) <- UR_3_ini[i]
 
-  initial(W_1[]) <- W_1_ini[i]
-  initial(W_2[]) <- W_2_ini[i]
-  initial(W_3[]) <- W_3_ini[i]
+  initial(WN_1[]) <- WN_1_ini[i]
+  initial(WN_2[]) <- WN_2_ini[i]
+  initial(WN_3[]) <- WN_3_ini[i]
   initial(WS_1[]) <- WS_1_ini[i]
   initial(WS_2[]) <- WS_2_ini[i]
   initial(WS_3[]) <- WS_3_ini[i]
@@ -159,15 +163,24 @@ child_recr = odin::odin({
   initial(J_1[]) <- J_1_ini[i]
   initial(J_2[]) <- J_2_ini[i]
   initial(J_3[]) <- J_3_ini[i]
-  initial(JR_1[]) <- JCL_1_ini[i]
-  initial(JR_2[]) <- JCL_2_ini[i]
-  initial(JR_3[]) <- JCL_3_ini[i]
+  initial(JR_1[]) <- JR_1_ini[i]
+  initial(JR_2[]) <- JR_2_ini[i]
+  initial(JR_3[]) <- JR_3_ini[i]
+  initial(JW_1[]) <- JW_1_ini[i]
+  initial(JW_2[]) <- JW_2_ini[i]
+  initial(JW_3[]) <- JW_3_ini[i]
+  initial(JRW_1[]) <- JRW_1_ini[i]
+  initial(JRW_2[]) <- JRW_2_ini[i]
+  initial(JRW_3[]) <- JRW_3_ini[i]
 
   ## setting dinemsions for everything
   dim(U) <- N_gender
   dim(U_1) <- N_gender
   dim(U_2) <- N_gender
   dim(U_3) <- N_gender
+  dim(UN_1) <- N_gender
+  dim(UN_2) <- N_gender
+  dim(UN_3) <- N_gender
   dim(US_1) <- N_gender
   dim(US_2) <- N_gender
   dim(US_3) <- N_gender
@@ -179,6 +192,9 @@ child_recr = odin::odin({
   dim(W_1) <- N_gender
   dim(W_2) <- N_gender
   dim(W_3) <- N_gender
+  dim(WN_1) <- N_gender
+  dim(WN_2) <- N_gender
+  dim(WN_3) <- N_gender
   dim(WS_1) <- N_gender
   dim(WS_2) <- N_gender
   dim(WS_3) <- N_gender
@@ -187,6 +203,7 @@ child_recr = odin::odin({
   dim(WR_3) <- N_gender
 
   dim(J) <- N_gender
+  dim(JCL) <- N_gender
   dim(J_1) <- N_gender
   dim(J_2) <- N_gender
   dim(J_3) <- N_gender
@@ -194,6 +211,13 @@ child_recr = odin::odin({
   dim(JR_1) <- N_gender
   dim(JR_2) <- N_gender
   dim(JR_3) <- N_gender
+
+  dim(JW_1) <- N_gender
+  dim(JW_2) <- N_gender
+  dim(JW_3) <- N_gender
+  dim(JRW_1) <- N_gender
+  dim(JRW_2) <- N_gender
+  dim(JRW_3) <- N_gender
 
   dim(S) <- N_gender
   dim(R) <- N_gender
@@ -213,18 +237,18 @@ child_recr = odin::odin({
   ##dim(N_2_ini) <- N_gender
   ##dim(N_3_ini) <- N_gender
 
-  dim(U_1_ini) <- N_gender
-  dim(U_2_ini) <- N_gender
-  dim(U_3_ini) <- N_gender
+  dim(UN_1_ini) <- N_gender
+  dim(UN_2_ini) <- N_gender
+  dim(UN_3_ini) <- N_gender
   dim(US_1_ini) <- N_gender
   dim(US_2_ini) <- N_gender
   dim(US_3_ini) <- N_gender
   dim(UR_1_ini) <- N_gender
   dim(UR_2_ini) <- N_gender
   dim(UR_3_ini) <- N_gender
-  dim(W_1_ini) <- N_gender
-  dim(W_2_ini) <- N_gender
-  dim(W_3_ini) <- N_gender
+  dim(WN_1_ini) <- N_gender
+  dim(WN_2_ini) <- N_gender
+  dim(WN_3_ini) <- N_gender
   dim(WS_1_ini) <- N_gender
   dim(WS_2_ini) <- N_gender
   dim(WS_3_ini) <- N_gender
@@ -237,6 +261,13 @@ child_recr = odin::odin({
   dim(JR_1_ini) <- N_gender
   dim(JR_2_ini) <- N_gender
   dim(JR_3_ini) <- N_gender
+  dim(JW_1_ini) <- N_gender
+  dim(JW_2_ini) <- N_gender
+  dim(JW_3_ini) <- N_gender
+  dim(JRW_1_ini) <- N_gender
+  dim(JRW_2_ini) <- N_gender
+  dim(JRW_3_ini) <- N_gender
+
 
   ##dim(births_1) <- N_gender
   ##dim(births_2) <- N_gender
@@ -249,7 +280,9 @@ child_recr = odin::odin({
   dim(recruit_j) <-N_gender
   ##dim(h) <-N_gender
   dim(test_prev_CL) <- N_gender
-  dim(test_incarcerated) <- N_gender
+  dim(test_custody_ratio) <- N_gender
+  dim(test_total_fte) <- N_gender
+  dim(test_total_rep) <- N_gender
 
   dim(II) <- N_gender
   dim(IE) <- N_gender
@@ -266,29 +299,64 @@ child_recr = odin::odin({
   dim(prop3_r) <- N_gender
   dim(cl_pc) <- N_gender #new & dodgy but goes here bc its mixing
   dim(x) <- c(N_gender, N_gender)
-  dim(y) <- c(N_gender, N_gender)
   dim(mix1_r) <- c(N_gender, N_gender)
   dim(mix2_r) <- c(N_gender, N_gender)
   dim(mix3_r) <- c(N_gender, N_gender)
 
-
-
   #pdimensions of the new dodgy stuff
   dim(age_in) <- N_gender
+  dim(incl_in) <- N_gender
   dim(excl_in) <- N_gender
   dim(close_in) <- N_gender
   dim(surv_in_i) <- N_gender
   dim(surv_in_e) <- N_gender
   dim(surv_in_c) <- N_gender
 
+  dim(fte1) <- N_gender
+  dim(fte2) <- N_gender
+  dim(fte3) <- N_gender
+  dim(fte_1) <- N_gender
+  dim(fte_cl_1) <- N_gender
+  dim(fte_2) <- N_gender
+  dim(fte_cl_2) <- N_gender
+  dim(fte_3) <- N_gender
+  dim(fte_cl_3) <- N_gender
+  dim(custody_fte) <- N_gender
+
+  dim(rep) <- N_gender
+  dim(rep_1) <- N_gender
+  dim(rep_cl_1) <- N_gender
+  dim(rep_2) <- N_gender
+  dim(rep_cl_2) <- N_gender
+  dim(rep_3) <- N_gender
+  dim(rep_cl_3) <- N_gender
+  dim(custody_rep) <- N_gender
+
+  dim(release_1) <- N_gender
+  dim(release_cl_1) <- N_gender
+  dim(release_2) <- N_gender
+  dim(release_cl_2) <- N_gender
+  dim(release_3) <- N_gender
+  dim(release_cl_3) <- N_gender
+
+  dim(missing_i) <- N_gender
+  dim(missing_e) <- N_gender
+  dim(missing_c) <- N_gender
+
+  dim(ss_i) <- N_gender
+  dim(ss_e) <- N_gender
+  dim(ss_c) <- N_gender
+
  dim(u1_out) <- N_gender
- dim( us1_out) <- N_gender
+ dim(us1_out) <- N_gender
  dim(ur1_out) <- N_gender
  dim(w1_out) <- N_gender
  dim(ws1_out) <- N_gender
  dim(wr1_out) <- N_gender
  dim(j1_out) <- N_gender
  dim(jr1_out) <- N_gender
+ dim(jw1_out) <- N_gender
+ dim(jrw1_out) <- N_gender
  dim(u2_out) <- N_gender
  dim(us2_out) <- N_gender
  dim(ur2_out) <- N_gender
@@ -297,6 +365,8 @@ child_recr = odin::odin({
  dim(wr2_out) <- N_gender
  dim(j2_out) <- N_gender
  dim(jr2_out) <- N_gender
+ dim(jw2_out) <- N_gender
+ dim(jrw2_out) <- N_gender
  dim(u3_out) <- N_gender
  dim(us3_out) <- N_gender
  dim(ur3_out) <- N_gender
@@ -305,6 +375,8 @@ child_recr = odin::odin({
  dim(wr3_out) <- N_gender
  dim(j3_out) <- N_gender
  dim(jr3_out) <- N_gender
+ dim(jw3_out) <- N_gender
+ dim(jrw3_out) <- N_gender
 
 
 
@@ -341,7 +413,7 @@ child_recr = odin::odin({
   COM_1[] <- N_1[i] - (J_1[i] + JR_1[i] + JW_1[i] + JRW_1[i])
   COM_2[] <- N_2[i] - (J_2[i] + JR_2[i] + JW_2[i] + JRW_2[i])
   COM_3[] <- N_3[i] - (J_3[i] + JR_3[i] + JW_2[i] + JRW_2[i])
-  COM[] <-  COM_1[i] + COM_2[i] + COM_3[i]
+  #COM[] <-  COM_1[i] + COM_2[i] + COM_3[i]
 
 
   #####################FIX NEEDED################
@@ -353,63 +425,59 @@ child_recr = odin::odin({
   #####################DIFFERENTIAL EQUATIONS###############################################################
   ##############################################################################################################################
 
-  #TASK
-  #1. surveillance!!!!!!!!!!!!!!1
-  #2. (or sub1) arrest and missing
-
-
-
+  #task
+  #1. - does the charging process need a delay
+  #2. whats the vibe with mortality
 
   ##differential equations - INCLUSION#####################
   ##univolved
-  deriv(UN_1[]) <- (1-surv_in_i[i])*incl_in[i]*age_in[i] + desist*WN_1[i] - fte*UN_1 - surveil_i*UN_1[1] - contact*recruit_1[i]*UN_1[i]*sum(mix1_r[,i]) - mortality*UN_1[i] - u1_out[i]
-  deriv(US_1[]) <- surv_in_i[i]*incl_in[i]*age_in[i] + surveil_i*UN_1[i] + (1-ss_arrest)*ss_i[i]*UN_1[i] + desist*WS_1[i] - contact*recruit_1[i]*US_1[i]*sum(mix1_r[,i]) - fte*crim_multiplier*US_1 - us1_out[i]
-  deriv(UR_1[]) <- fte*(1-custody_fte)*(UN_1+crim_multiplier*US_1) + release_1[i] + desist*WR_1[i] - contact*recruit_1[i]*UR_1[i]*sum(mix1_r[,i]) - ur1_out[i]
+  deriv(UN_1[]) <- (1-surv_in_i[i])*incl_in[i]*age_in[i] + desist*WN_1[i] - (missing_i[i]+ss_i[i])*UN_1[i] - fte1[i]*UN_1[i] - contact*recruit_1[i]*UN_1[i]*sum(mix1_r[,i]) - u1_out[i]
+  deriv(US_1[]) <- surv_in_i[i]*incl_in[i]*age_in[i] + (missing_i[i]+ss_i[i])*UN_1[i] + desist*WS_1[i] - contact*recruit_1[i]*US_1[i]*sum(mix1_r[,i]) - fte1[i]*surv_multiplier*US_1[i] - us1_out[i]
+  deriv(UR_1[]) <- fte1[i]*(1-custody_fte[i])*(UN_1[i]+surv_multiplier*US_1[i]) + release_1[i] + desist*WR_1[i] - contact*recruit_1[i]*UR_1[i]*sum(mix1_r[,i]) - ur1_out[i]
   ##working
-  deriv(WN_1[]) <- contact*recruit_1[i]*UN_1[i]*sum(mix1_r[,i]) - surveil_i*WN_1[i] - fte*WN_2 - arrest*WN_1[i] - desist*WN_1[i] - mortality*WN_1[i] - missing*WN_1[i] - w1_out[i]
-  deriv(WS_1[]) <- surveil_i*WN_1[i] + contact*recruit_1[i]*US_1[i]*sum(mix1_r[,i]) + missing*WN_1[i] + arrest_i[i]*WN_1[i] - desist*WS_1[i] - fte*crim_multiplier*WS_1 - ws1_out[i]
-  deriv(WR_1[]) <- contact*recruit_1[i]*UR_1[i]*sum(mix1_r[,i]) + fte*(1-custody_fte)*(WN_1+crim_multiplier*WS_1) + release_cl_1[i] - desist*WR_1[i] - wr1_out[i]
+  deriv(WN_1[]) <- contact*recruit_1[i]*UN_1[i]*sum(mix1_r[,i]) - (cl_multiplier*missing_i[i]+ss_i[i])*WN_1[i] - fte1[i]*WN_1[i] - desist*WN_1[i] - w1_out[i]
+  deriv(WS_1[]) <-contact*recruit_1[i]*US_1[i]*sum(mix1_r[,i]) + (cl_multiplier*missing_i[i]+ss_i[i])*WN_1[i] - desist*WS_1[i] - fte1[i]*surv_multiplier*WS_1[i] - ws1_out[i]
+  deriv(WR_1[]) <- contact*recruit_1[i]*UR_1[i]*sum(mix1_r[,i]) + fte1[i]*(1-custody_fte[i])*(WN_1[i]+surv_multiplier*WS_1[i]) + release_cl_1[i] - desist*WR_1[i] - wr1_out[i]
 
   ##jailed (remand and sentenced)
   deriv(JR_1[]) <- remand*(fte_1[i] + rep_1[i]) - end_rem*JR_1[i] - contact*recruit_j[i]*cl_pc[i]*JR_1[i] - jr1_out[i]
   deriv(JRW_1[]) <- remand*(fte_cl_1[i] + rep_cl_1[i]) + contact*recruit_j[i]*cl_pc[i]*JR_1[i] - end_rem*JRW_1[i] - jrw1_out[i]
 
-  deriv(J_1[]) <- (1-remand)*(custody_fte*fte_1[i] + custody_rep*rep_1[i]) + r2c*end_rem*JR_1[i] + deter*JW_1[i] - end_cust*J_1[i] - mortality*JCL_1[i] - contact*recruit_j[i]*cl_pc[i]*J_1[i] - j1_out[i]
-  deriv(JW_1[]) <- (1-remand)*(custody_fte*fte_cl_1[i] + custody_rep*rep_cl_1[i]) + r2c*end_rem*JRW_1[i] + contact*recruit_j[i]*cl_pc[i]*J_1[i] - deter*JW_1[i] - end_cust*JW_1[i] - mortality*JW_1[i] - jw1_out[i]
+  deriv(J_1[]) <- (1-remand)*(custody_fte[i]*fte_1[i] + custody_rep[i]*rep_1[i]) + r2c*end_rem*JR_1[i] + deter*JW_1[i] - end_cust*J_1[i] - contact*recruit_j[i]*cl_pc[i]*J_1[i] - j1_out[i]
+  deriv(JW_1[]) <- (1-remand)*(custody_fte[i]*fte_cl_1[i] + custody_rep[i]*rep_cl_1[i]) + r2c*end_rem*JRW_1[i] + contact*recruit_j[i]*cl_pc[i]*J_1[i] - deter*JW_1[i] - end_cust*JW_1[i] - jw1_out[i]
 
 
   ##differential equations - EXCLUSION#####################
   ##univolved
-  deriv(UN_2[]) <- (1-surv_in_e[i])*excl_in[i]*age_in[i] + desist*WN_2[i] - fte*UN_2 - surveil_e*U_2[1] - contact*recruit_2[i]*U_2[i]*sum(mix2_r[,i]) - mortality*U_2[i] - u2_out[i]
-  deriv(US_2[]) <- surv_in_e[i]*excl_in[i]*age_in[i] +surveil_e*U_2[i] + ss_e[i]*U_2[i] + arrest_e[i]*U_2[i] + desist*WS_2[i] - contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i]) - fte*crim_multiplier*US_2 - us2_out[i]
-  deriv(UR_2[]) <- fte*(1-custody_fte)*(UN_2+crim_multiplier*US_2) + release_2[i] + desist*WR_2[i] - contact*recruit_2[i]*UW_2[i]*sum(mix2_r[,i]) - ur2_out[]
+  deriv(UN_2[]) <- (1-surv_in_e[i])*excl_in[i]*age_in[i] + desist*WN_2[i] - (missing_e[i]+ss_e[i])*UN_2[i] - fte2[i]*UN_2[i] - contact*recruit_2[i]*U_2[i]*sum(mix2_r[,i]) - u2_out[i]
+  deriv(US_2[]) <- surv_in_e[i]*excl_in[i]*age_in[i] + (missing_e[i]+ss_e[i])*UN_2[i] + desist*WS_2[i] - contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i]) - fte2[i]*surv_multiplier*US_2[i] - us2_out[i]
+  deriv(UR_2[]) <- fte2[i]*(1-custody_fte[i])*(UN_2[i]+surv_multiplier*US_2[i]) + release_2[i] + desist*WR_2[i] - contact*recruit_2[i]*UR_2[i]*sum(mix2_r[,i]) - ur2_out[i]
   ##working
-  deriv(WN_2[]) <- contact*recruit_2[i]*UN_2[i]*sum(mix2_r[,i]) - surveil_e*W_2[i] - fte*WN_2 - arrest*WN_2[i] - desist*WN_2[i] - missing*WN_2[i] - mortality*WN_2[i] - w2_out[i]
-  deriv(WS_2[]) <- surveil_e*WN_2[i] + contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i]) + missing*WN_2[i] + arrest_e[i]*WN_2[i] - desist*WS_2[i] - fte*crim_multiplier*WS_2 - ws2_out[i]
-  deriv(WR_2[]) <- contact*recruit_2[i]*UR_2[i]*sum(mix2_r[,i]) + fte*(1-custody_fte)*(WN_2+crim_multiplier*WS_2) + release_cl_2[i] - desist*WR_2[i] - wr2_out[i]
+  deriv(WN_2[]) <- contact*recruit_2[i]*UN_2[i]*sum(mix2_r[,i]) - fte2[i]*WN_2[i] - (cl_multiplier*missing_e[i]+ss_e[i])*WN_2[i] - desist*WN_2[i] - w2_out[i]
+  deriv(WS_2[]) <- contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i]) + (cl_multiplier*missing_e[i]+ss_e[i])*WN_2[i] - desist*WS_2[i] - fte2[i]*surv_multiplier*WS_2[i] - ws2_out[i]
+  deriv(WR_2[]) <- contact*recruit_2[i]*UR_2[i]*sum(mix2_r[,i]) + fte2[i]*(1-custody_fte[i])*(WN_2[i]+surv_multiplier*WS_2[i]) + release_cl_2[i] - desist*WR_2[i] - wr2_out[i]
   ##jailed (remand and sentenced)
   deriv(JR_2[]) <- remand*(fte_2[i] + rep_2[i]) - end_rem*JR_2[i] - contact*recruit_j[i]*cl_pc[i]*JR_2[i] - jr2_out[i]
   deriv(JRW_2[]) <- remand*(fte_cl_2[i] + rep_cl_2[i]) + contact*recruit_j[i]*cl_pc[i]*JR_2[i] - end_rem*JRW_2[i] - jrw2_out[i]
 
-  deriv(J_2[]) <- (1-remand)*(custody_fte*fte_2[i] + custody_rep*rep_2[i]) + r2c*end_rem*JR_2[i] + deter*JW_2[i] - end_cust*J_2[i] - mortality*JCL_2[i] - contact*recruit_j[i]*cl_pc[i]*J_2[i] - j2_out[i]
-  deriv(JW_2[]) <- (1-remand)*(custody_fte*fte_cl_2[i] + custody_rep*rep_cl_2[i]) + r2c*end_rem*JRW_2[i] + contact*recruit_j[i]*cl_pc[i]*J_2[i] - deter*JW_2[i] - end_cust*JW_2[i] - mortality*JW_2[i] - jw2_out[i]
+  deriv(J_2[]) <- (1-remand)*(custody_fte[i]*fte_2[i] + custody_rep[i]*rep_2[i]) + r2c*end_rem*JR_2[i] + deter*JW_2[i] - end_cust*J_2[i] - contact*recruit_j[i]*cl_pc[i]*J_2[i] - j2_out[i]
+  deriv(JW_2[]) <- (1-remand)*(custody_fte[i]*fte_cl_2[i] + custody_rep[i]*rep_cl_2[i]) + r2c*end_rem*JRW_2[i] + contact*recruit_j[i]*cl_pc[i]*J_2[i] - deter*JW_2[i] - end_cust*JW_2[i] - jw2_out[i]
 
   ##differential equations - CLOSE PROXIMITY -#####################
   ##univolved
-  deriv(UN_3[]) <- (1-surv_in_c[i])*close_in[i]*age_in[i] + desist*WN_3[i] - surveil_c*UN_3[i] - fte*UN_3 - contact*recruit_3[i]*UN_3[i]*sum(mix3_r[,i]) - mortality*UN_3[i] - u3_out[i]
-  deriv(US_3[]) <- surv_in_c[i]*close_in[i]*age_in[i] + surveil_c*U_3[i] + arrest_c[i]*UN_3[i] + desist*WS_3[i] - contact*recruit_3[i]*US_3[i]*sum(mix3_r[,i]) - fte*crim_multiplier*US_3 - us3_out[i]
-  deriv(UR_3[]) <- fte*(1-custody_fte)*(UN_3+crim_multiplier*US_3) + release_3[i] + desist*WR_3[i] - contact*recruit_3[i]*UR_3[i]*sum(mix3_r[,i]) - ur3_out[i]
+  deriv(UN_3[]) <- (1-surv_in_c[i])*close_in[i]*age_in[i] + desist*WN_3[i] - (missing_c[i]+ss_c[i])*UN_3[i] - fte3[i]*UN_3[i] - contact*recruit_3[i]*UN_3[i]*sum(mix3_r[,i]) - u3_out[i]
+  deriv(US_3[]) <- surv_in_c[i]*close_in[i]*age_in[i] + (missing_c[i]+ss_c[i])*UN_3[i] + desist*WS_3[i] - contact*recruit_3[i]*US_3[i]*sum(mix3_r[,i]) - fte3[i]*surv_multiplier*US_3[i] - us3_out[i]
+  deriv(UR_3[]) <- fte3[i]*(1-custody_fte[i])*(UN_3[i]+surv_multiplier*US_3[i]) + release_3[i] + desist*WR_3[i] - contact*recruit_3[i]*UR_3[i]*sum(mix3_r[,i]) - ur3_out[i]
   ##working
-  deriv(WN_3[]) <- contact*recruit_3[i]*UN_3[i]*sum(mix3_r[,i]) - surveil_c*WN_3[i] - arrest*WN_3[i] - fte*WN_3 - desist*WN_3[i] - missing*WN_3[i] - mortality*WN_3[i] - w3_out[i]
-  deriv(WS_3[]) <- surveil_c*WN_3[i] + contact*recruit_3[i]*US_3[i]*sum(mix3_r[,i]) + missing*WN_3[i] + arrest_c[i]*WN_3[i] - desist*WS_3[i] - fte*crim_multiplier*WS_3 - ws3_out[i]
-  deriv(WR_3[]) <- contact*recruit_3[i]*UR_3[i]*sum(mix3_r[,i]) + fte*(1-custody_fte)*(WN_3+crim_multiplier*WS_3) + release_cl_3[i] - desist*WR_3[i] - wr3_out[i]
+  deriv(WN_3[]) <- contact*recruit_3[i]*UN_3[i]*sum(mix3_r[,i]) - (cl_multiplier*missing_c[i]+ss_c[i])*WN_3[i] - fte3[i]*WN_3[i] - desist*WN_3[i] - w3_out[i]
+  deriv(WS_3[]) <- contact*recruit_3[i]*US_3[i]*sum(mix3_r[,i]) + (cl_multiplier*missing_c[i]+ss_c[i])*WN_3[i] - desist*WS_3[i] - fte3[i]*surv_multiplier*WS_3[i] - ws3_out[i]
+  deriv(WR_3[]) <- contact*recruit_3[i]*UR_3[i]*sum(mix3_r[,i]) + fte3[i]*(1-custody_fte[i])*(WN_3[i]+surv_multiplier*WS_3[i]) + release_cl_3[i] - desist*WR_3[i] - wr3_out[i]
   ##jailed (remand and sentenced)
   deriv(JR_3[]) <- remand*(fte_3[i] + rep_3[i]) - end_rem*JR_3[i] - contact*recruit_j[i]*cl_pc[i]*JR_3[i] - jr3_out[i]
   deriv(JRW_3[]) <- remand*(fte_cl_3[i] + rep_cl_3[i]) + contact*recruit_j[i]*cl_pc[i]*JR_3[i] - end_rem*JRW_3[i] - jrw3_out[i]
 
-  deriv(J_3[]) <- (1-remand)*(custody_fte*fte_3[i] + custody_rep*rep_3[i]) + r2c*end_rem*JR_3[i] + deter*JW_3[i] - end_cust*J_3[i] - mortality*JCL_3[i] - contact*recruit_j[i]*cl_pc[i]*J_3[i] - j3_out[i]
-  deriv(JW_3[]) <- (1-remand)*(custody_fte*fte_cl_3[i] + custody_rep*rep_cl_3[i]) + r2c*end_rem*JRW_3[i] + contact*recruit_j[i]*cl_pc[i]*J_3[i] - deter*JW_3[i] - end_cust*JW_3[i] - mortality*JW_3[i] - jw3_out[i]
-
+  deriv(J_3[]) <- (1-remand)*(custody_fte[i]*fte_3[i] + custody_rep[i]*rep_3[i]) + r2c*end_rem*JR_3[i] + deter*JW_3[i] - end_cust*J_3[i] - contact*recruit_j[i]*cl_pc[i]*J_3[i] - j3_out[i]
+  deriv(JW_3[]) <- (1-remand)*(custody_fte[i]*fte_cl_3[i] + custody_rep[i]*rep_cl_3[i]) + r2c*end_rem*JRW_3[i] + contact*recruit_j[i]*cl_pc[i]*J_3[i] - deter*JW_3[i] - end_cust*JW_3[i] - jw3_out[i]
 
 
   #making the mixing matrix help
@@ -435,27 +503,26 @@ child_recr = odin::odin({
 
   #mixing in jail - note that no assortative mixing by class in jail at all - total random mixing wrt class
   #however, completely assortative wrt gender
-  cl_pc[i] <- JCL[i] / (J[i] + JR[i])
+  cl_pc[] <- JCL[i] / (J[i] + JR[i])
 
   #to make the ODEs a little more readable
   #total first time entrants (from no contact & surveilled, both working and not) for each class group
   #note to self - you should really probably have an extra chance of entering if you're actually in CL
   #maybe add another multiplier lol, change the name of crim_multiplier (too general) to surv_multiplier
-  fte_1[] <- fte*(UN_1[i]+crim_multiplier*US_1[i])
-  fte_cl_1[] <- fte*(WN_1[i]+crim_multiplier*WS_1[i])
-  fte_2[] <- fte*(UN_2[i]+crim_multiplier*US_2[i])
-  fte_cl_2[] <- fte*(WN_2[i]+crim_multiplier*WS_2[i])
-  fte_3[] <- fte*(UN_3[i]+crim_multiplier*US_3[i])
-  fte_cl_3[] <- fte*(WN_3[i]+crim_multiplier*WS_3[i])
+  fte_1[] <- fte1[i]*(UN_1[i]+surv_multiplier*US_1[i])
+  fte_cl_1[] <- cl_multiplier*fte1[i]*(WN_1[i]+surv_multiplier*WS_1[i])
+  fte_2[] <- fte2[i]*(UN_2[i]+surv_multiplier*US_2[i])
+  fte_cl_2[] <- cl_multiplier*fte2[i]*(WN_2[i]+surv_multiplier*WS_2[i])
+  fte_3[] <- fte3[i]*(UN_3[i]+surv_multiplier*US_3[i])
+  fte_cl_3[] <- cl_multiplier*fte3[i]*(WN_3[i]+surv_multiplier*WS_3[i])
 
   #total repeat offenses (from those already in the CSJ, both working and not) for each class group
-  rep_1[] <- rep*UR_1[i]
-  rep_cl_1[] <- rep*WR_1[i]
-  rep_2[] <- rep*UR_2[i]
-  rep_cl_2[] <- rep*WR_2[i]
-  rep_3[] <- rep*UR_3[i]
-  rep_cl_3[] <- rep*WR_3[i]
-
+  rep_1[] <- rep[i]*UR_1[i]
+  rep_cl_1[] <- cl_multiplier*rep[i]*WR_1[i]
+  rep_2[] <- rep[i]*UR_2[i]
+  rep_cl_2[] <- cl_multiplier*rep[i]*WR_2[i]
+  rep_3[] <- rep[i]*UR_3[i]
+  rep_cl_3[] <- cl_multiplier*rep[i]*WR_3[i]
 
   #total released from custody (both sentences and remand) back into the CSJ group
   release_1[] <- (1-r2c)*end_rem*JR_1[i] + end_cust*J_1[i]
@@ -477,13 +544,15 @@ child_recr = odin::odin({
   #remand should be about 20% of total population in custody
   test_custody_ratio[] <- JR[i]/(JR[i] + J[i])
 
-  #what about recidivism rate, or even prop CL of those entering jail v prop CL of those released
-
+  test_total_rep[] <- rep_1[i] + rep_cl_1[i] + rep_2[i] + rep_cl_2[i] + rep_3[i] + rep_cl_3[i]
+  test_total_fte[] <- fte_1[i] + fte_cl_1[i] + fte_2[i] + fte_cl_2[i] + fte_3[i] + fte_cl_3[i]
 
 
   ##generated quantities
   output(test_prev_CL) <- test_prev_CL
   output(test_custody_ratio) <- test_custody_ratio
+  output(test_total_rep) <- test_total_rep
+  output(test_total_fte) <- test_total_fte
   output(U) <- U
   output(W) <- W
   output(JR) <- JR
@@ -498,20 +567,59 @@ child_recr = odin::odin({
 pars <- list(x = rbind(c(0.8, 0.2), #first row is group 1's mixing group 1,2,3,4,5
                        c(0.2, 0.8)),
              alpha = 1.25,
-             W_1_ini = c(0,0), #number initially working
-             W_2_ini = c(0,0), #number initially working
-             W_3_ini = c(1,0), #number initially working
-             H_1_ini = c(0,0), #number initially harming
-             H_2_ini = c(0,0), #number initially harming
-             H_3_ini = c(1,0), #number initially harming
-             J_1_ini = c(0,0), #number initially in jail
-             J_2_ini = c(0,0), #number initially in jail
-             J_3_ini = c(0,0), #number initially in jail
+             UN_1_ini = c(41042,37884), #number initially uninvolved, no police contact
+             UN_2_ini = c(17679,16319), #number initially uninvolved, no police contact - 93.6% of the excluded
+             UN_3_ini = c(0,0), #number initially uninvolved, no police contact - zero for close, all already flagged
+             US_1_ini = c(0,0), #number initially uninvolved, surveilled - zero for included
+             US_2_ini = c(1263,1165), #number initially uninvolved, surveilled - 6.6% of the excluded
+             US_3_ini = c(4249,1821), #number initially uninvolved, surveilled - 100% of the close
+             UR_1_ini = c(4,2), #number initially uninvolved, in CSJ - lets say 800 start in the CSJ (i just picked), and i split between 3
+             UR_2_ini = c(356,39), #number initially uninvolved, in CSJ
+             UR_3_ini = c(360,40), #number initially uninvolved, in CSJ
+             WN_1_ini = c(0,0), #number initially working, no police contact
+             WN_2_ini = c(0,0), #number initially working, no police contact
+             WN_3_ini = c(0,0), #number initially working, no police contact
+             WS_1_ini = c(0,0), #number initially working, surveilled
+             WS_2_ini = c(1,0), #number initially working, surveilled
+             WS_3_ini = c(5,1), #number initially working, surveilled -lets start small working & hope it takes off?
+             WR_1_ini = c(0,0), #number initially working, in CSJ
+             WR_2_ini = c(1,0), #number initially working, in CSJ
+             WR_3_ini = c(1,0), #number initially working, in CSJ
+             J_1_ini = c(1,0), #number initially on custodial sentence
+             J_2_ini = c(7,0), #number initially on custodial sentence
+             J_3_ini = c(25,5), #number initially on custodial sentence - prev of custodial sentence is 38 so, just split it
+             JW_1_ini = c(0,0), #number of CL initially on custodial sentence
+             JW_2_ini = c(0,0), #number of CL initially on custodial sentence
+             JW_3_ini = c(1,0), #number of CL initially on custodial sentence
+             JR_1_ini = c(0,0), #number initially remanded to custody - none
+             JR_2_ini = c(4,0), #number initially remanded to custody - prevalence of remand is 9.5 so just split between these
+             JR_3_ini = c(3,1.5), #number initially remanded to custody - prevalence of remand is 9.5 so just split between these
+             JRW_1_ini = c(0,0), #number of CL initially remanded to custody
+             JRW_2_ini = c(0,0), #number of CL initially remanded to custody -
+             JRW_3_ini = c(0,0), #number of CL initially remanded to custody -
+             age_in = c(0,0), #boys, girls  coming in weekly - should be set to [151, 141]
+             excl_in = c(0.29,0.19), #percent boys, girls  coming in going to excluded
+             close_in = c(0.01,0.01), #percent boys, girls  coming in going to close
+             surv_in_i = c(0,0), #pc of boys, girls  in INCLUDED that are surveilled at 10
+             surv_in_e = c(0.07,0.07), #pc of gboys, girls  in EXCLUDED that are surveilled at 10
+             surv_in_c = c(0.6,0.5), #pc of boys, girls in CLOSE that are surveilled at 10
+             missing_i = c(0,0), #rate of missing episodes for the included group
+             missing_e = c(0.003,0.003), #rate of missing episodes for the excluded group
+             missing_c = c(0.03,0.03), #rate of missing episodes for the close group
+             ss_i = c(0.00003529546,0.000002799211), #rate of stop&search for the included group
+             ss_e = c(0.001087095,0.00009400705), #rate of stop&search  for the excluded group
+             ss_c = c(0.003954082,0.0009812287), #rate of stop&search  for the close group
              recruit_1 = c(0.0005,0.0001),
              recruit_2 = c(0.001,0.0009),
              recruit_3 = c(0.005,0.003),
-             h = c(0.25,0.125)
-)
+             recruit_j = c(0.005,0.003),
+             custody_fte = c(0.015,0.003), #percentage of fte's that get a custodial sentence (of men, 1.5% - of women, 0.3%)
+             custody_rep = c(0.14,0.04), #percentage of repeat offenders that get a custodial sentence (that weren't remanded to custody)
+             fte1 = c(0.00001088204,0.000003463907), #some kind of rate of included first time entrants
+             fte2 = c(0.0003351652,0.0001170569), #some kind of rate of excluded first time entrants
+             fte3 = c(0.001219093,0.001214229), #some kind of rate of close first time entrants total (should work out as like 600 a year, 23% female 77% male)
+             rep = c(0.002,0.001) #some kind of rate of repeated offences (should work out as like 452
+    )
 
 
 mod <- child_recr(user = pars)
@@ -523,7 +631,13 @@ U_data <- data.frame(CL_data[,grep('U',colnames(CL_data))])
 W_data <- data.frame(CL_data[,grep('W',colnames(CL_data))])
 H_data <- data.frame(CL_data[,grep('H',colnames(CL_data))])
 J_data <- data.frame(CL_data[,grep('J',colnames(CL_data))])
+
 prev_CL_data <- data.frame(CL_data[,grep('prev_CL',colnames(CL_data))])
+custody_ratio_data <- data.frame(CL_data[,grep('custody_ratio',colnames(CL_data))])
+total_rep_data <- data.frame(CL_data[,grep('total_rep',colnames(CL_data))])
+total_fte_data <- data.frame(CL_data[,grep('total_fte',colnames(CL_data))])
+
+plot(total_fte_data)
 
 
 incl_data <- data.frame(CL_data[,grep('1',colnames(CL_data))])

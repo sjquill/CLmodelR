@@ -1,8 +1,19 @@
 
+##two mixing matrices - one for recruitment thats strongly assortative
+##and the other for harm that's very close to random
+##the mixing part for recruitment goes over N because its about the total population whereas
+##the one for harm goes over (w+H) because its only about those
+
+##actually the two different splits - leading to a 3 dimensional array - i dont think that would work
+
+
+
 ##will i say only involved kids go missing? like that's how police notice kids?
 ##so we've got TriED and then sen_cust (90 kids in birmingham per year) and CHARGED and then rem_cust
 ##and we've got TriED and then sen_rest (880 kids per year) and CHARGED and then rem_rest
 
+test?
+#what about recidivism rate, or even prop CL of those entering jail v prop CL of those released
 
 
 
@@ -97,6 +108,14 @@ deter
 we also used to have this desistence after first harm.
 
 + d*h[i]*W_1[i]
+
+
+#TASK
+#1. surveillance!!!!!!!!!!!!!!1
+#2. (or sub1) arrest and missing
+
+#OK emergecny SHORT CUT - just do stop and search and missing for transition to surveillance!!!
+
 
 
 
