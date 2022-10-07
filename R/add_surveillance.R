@@ -220,14 +220,20 @@ child_recr = odin::odin({
   dim(JRW_3) <- N_gender
 
   dim(S) <- N_gender
+  dim(S_1) <- N_gender
+  dim(S_2) <- N_gender
+  dim(S_3) <- N_gender
   dim(R) <- N_gender
+  dim(R_1) <- N_gender
+  dim(R_2) <- N_gender
+  dim(R_3) <- N_gender
 
   dim(N) <- N_gender
   dim(N_1) <- N_gender
   dim(N_2) <- N_gender
   dim(N_3) <- N_gender
 
-  dim(COM) <- N_gender
+  #dim(COM) <- N_gender
   dim(COM_1) <- N_gender
   dim(COM_2) <- N_gender
   dim(COM_3) <- N_gender
@@ -402,9 +408,15 @@ child_recr = odin::odin({
   JR[] <- JR_1[i] + JR_2[i] + JR_3[i] + JRW_1[i] + JRW_2[i] + JRW_3[i]
   JCL[] <- JW_1[i] + JW_2[i] + JW_3[i] + JRW_1[i] + JRW_2[i] + JRW_3[i]
 
-  S[] <- US_1[i] + US_2[i] + US_3[i] + WS_1[i] + WS_2[i] + WS_3[i] ##total numbers surveilled include both those working & not
-  R[] <- UR_1[i] + UR_2[i] + UR_3[i] + WR_1[i] + WR_2[i] + WR_3[i] ##total numbers under restrictions include both those working & not
+  S[] <- US_1[i] + US_2[i] + US_3[i] + WS_1[i] + WS_2[i] + WS_3[i]##total numbers surveilled include both those working & not
+  S_1[] <- US_1[i] + WS_1[i]
+  S_2[] <- US_2[i] + WS_2[i]
+  S_3[] <- US_3[i] + WS_3[i]
 
+  R[] <- UR_1[i] + UR_2[i] + UR_3[i] + WR_1[i] + WR_2[i] + WR_3[i] ##total numbers under restrictions include both those working & not
+  R_1[] <- UR_1[i] + WR_1[i]
+  R_2[] <- UR_2[i] + WR_2[i]
+  R_3[] <- UR_3[i] + WR_3[i]
   ##I[] <- U_1[i] + W_1[i] + H_1[i] + J_1[i] - considering a re-name - you would have to go change the mixing matrices
   ##E[] <- U_2[i] + W_2[i] + H_3[i] + J_2[i]
   ##C[] <- U_3[i] + W_3[i] + H_2[i] + J_3[i]
@@ -535,7 +547,6 @@ child_recr = odin::odin({
   #making stuff neater?
   incl_in[] <- 1 - excl_in[i] - close_in[i]
 
-
   #tests - replicates known/observable CL dynamcis/ policing/CJS attributes?
   #for example, 55% percent of cautions/sentences are of first time entrants to the CSJ
   #what about girl v boy dynamics...
@@ -554,14 +565,27 @@ child_recr = odin::odin({
   output(test_total_rep) <- test_total_rep
   output(test_total_fte) <- test_total_fte
   output(U) <- U
+  output(U_1) <- U_1
+  output(U_2) <- U_2
+  output(U_3) <- U_3
   output(W) <- W
+  output(W_1) <- W_1
+  output(W_2) <- W_2
+  output(W_3) <- W_3
   output(JR) <- JR
   output(J) <- J
   output(S) <- S
   output(R) <- R
+  output(S_1) <- S_1
+  output(R_1) <- R_1
+  output(S_2) <- S_2
+  output(R_2) <- R_2
+  output(S_3) <- S_3
+  output(R_3) <- R_3
+
+
 
 }, target='r')        #or c
-
 
 
 pars <- list(x = rbind(c(0.8, 0.2), #first row is group 1's mixing group 1,2,3,4,5
@@ -618,31 +642,149 @@ pars <- list(x = rbind(c(0.8, 0.2), #first row is group 1's mixing group 1,2,3,4
              fte1 = c(0.00001088204,0.000003463907), #some kind of rate of included first time entrants
              fte2 = c(0.0003351652,0.0001170569), #some kind of rate of excluded first time entrants
              fte3 = c(0.001219093,0.001214229), #some kind of rate of close first time entrants total (should work out as like 600 a year, 23% female 77% male)
-             rep = c(0.002,0.001) #some kind of rate of repeated offences (should work out as like 452
+             rep = c(0.002,0.001), #some kind of rate of repeated offences (should work out as like 452
+             u1_out = c(0,0),  #percentage of exiters leaving from this state, boy and girl
+             us1_out = c(0,0),
+             ur1_out = c(0,0),
+             w1_out = c(0,0),
+             ws1_out = c(0,0),
+             wr1_out = c(0,0),
+             j1_out = c(0,0),
+             jr1_out = c(0,0),
+             jw1_out = c(0,0),
+             jrw1_out = c(0,0),
+             u2_out = c(0,0),
+             us2_out = c(0,0),
+             ur2_out = c(0,0),
+             w2_out = c(0,0),
+             ws2_out = c(0,0),
+             wr2_out = c(0,0),
+             j2_out = c(0,0),
+             jr2_out = c(0,0),
+             jw2_out = c(0,0),
+             jrw2_out = c(0,0),
+             u3_out = c(0,0),
+             us3_out = c(0,0),
+             ur3_out = c(0,0),
+             w3_out = c(0,0),
+             ws3_out = c(0,0),
+             wr3_out = c(0,0),
+             j3_out = c(0,0),
+             jr3_out = c(0,0),
+             jw3_out = c(0,0),
+             jrw3_out = c(0,0)
     )
 
 
+
+
+
 mod <- child_recr(user = pars)
-t <- seq(0, 260, length.out = 520)  #from 0 to 5 years, two steps a week or something
+t <- seq(0, 520, length.out = 1040)  #from 0 to 10 years, two steps a week or something
 CL_data <- as.data.frame(mod$run(t))
 
 
 U_data <- data.frame(CL_data[,grep('U',colnames(CL_data))])
 W_data <- data.frame(CL_data[,grep('W',colnames(CL_data))])
-H_data <- data.frame(CL_data[,grep('H',colnames(CL_data))])
 J_data <- data.frame(CL_data[,grep('J',colnames(CL_data))])
+R_data <- data.frame(CL_data[,grep('R',colnames(CL_data))])
+S_data <- data.frame(CL_data[,grep('S',colnames(CL_data))])
+
+incl_data <- data.frame(CL_data[,grep('_1',colnames(CL_data))])
+excl_data <- data.frame(CL_data[,grep('_2',colnames(CL_data))])
+close_data <- data.frame(CL_data[,grep('_3',colnames(CL_data))])
 
 prev_CL_data <- data.frame(CL_data[,grep('prev_CL',colnames(CL_data))])
 custody_ratio_data <- data.frame(CL_data[,grep('custody_ratio',colnames(CL_data))])
 total_rep_data <- data.frame(CL_data[,grep('total_rep',colnames(CL_data))])
 total_fte_data <- data.frame(CL_data[,grep('total_fte',colnames(CL_data))])
 
-plot(total_fte_data)
 
 
-incl_data <- data.frame(CL_data[,grep('1',colnames(CL_data))])
-excl_data <- data.frame(CL_data[,grep('2',colnames(CL_data))])
-close_data <- data.frame(CL_data[,grep('3',colnames(CL_data))])
+ggplot(data = U_data) +
+  geom_line(mapping = aes(x=t, y=U_1.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=U_1.2.), color = "blue") +
+geom_line(mapping = aes(x=t, y=U_2.1.), color = "orange") +
+  geom_line(mapping = aes(x=t, y=U_2.2.), color = "green") +
+geom_line(mapping = aes(x=t, y=U_3.1.), color = "yellow") +
+  geom_line(mapping = aes(x=t, y=U_3.2.), color = "purple")
+
+ggplot(data = W_data) +
+  geom_line(mapping = aes(x=t, y=W_1.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=W_1.2.), color = "blue") +
+  geom_line(mapping = aes(x=t, y=W_2.1.), color = "orange") +
+  geom_line(mapping = aes(x=t, y=W_2.2.), color = "green") +
+  geom_line(mapping = aes(x=t, y=W_3.1.), color = "yellow") +
+  geom_line(mapping = aes(x=t, y=W_3.2.), color = "purple")
+
+ggplot(data = U_data) +
+  geom_line(mapping = aes(x=t, y=U_1.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=U_1.2.), color = "blue") +
+  geom_line(mapping = aes(x=t, y=U_2.1.), color = "orange") +
+  geom_line(mapping = aes(x=t, y=U_2.2.), color = "green") +
+  geom_line(mapping = aes(x=t, y=U_3.1.), color = "yellow") +
+  geom_line(mapping = aes(x=t, y=U_3.2.), color = "purple")
+
+ggplot(data = S_data) +
+  geom_line(mapping = aes(x=t, y=S_1.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=S_1.2.), color = "blue") +
+  geom_line(mapping = aes(x=t, y=S_2.1.), color = "orange") +
+  geom_line(mapping = aes(x=t, y=S_2.2.), color = "green") +
+  geom_line(mapping = aes(x=t, y=S_3.1.), color = "yellow") +
+  geom_line(mapping = aes(x=t, y=S_3.2.), color = "purple")
+
+ggplot(data = J_data) +
+  geom_line(mapping = aes(x=t, y=J_1.1.+JR_1.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=J_1.2.+JR_1.2.), color = "blue") +
+  geom_line(mapping = aes(x=t, y=J_2.1.+JR_2.1.), color = "orange") +
+  geom_line(mapping = aes(x=t, y=J_2.2.+JR_2.2.), color = "green") +
+  geom_line(mapping = aes(x=t, J_3.1.+JR_3.2.), color = "yellow") +
+  geom_line(mapping = aes(x=t, y=J_3.2.+JR_3.2.), color = "purple")
+
+ggplot(data = R_data) +
+  geom_line(mapping = aes(x=t, y=R_1.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=R_1.2.), color = "blue") +
+  geom_line(mapping = aes(x=t, y=R_2.1.), color = "orange") +
+  geom_line(mapping = aes(x=t, y=R_2.2.), color = "green") +
+  geom_line(mapping = aes(x=t, y=R_3.1.), color = "yellow") +
+  geom_line(mapping = aes(x=t, y=R_3.2.), color = "purple")
+
+
+
+ggplot(data = total_fte_data) +
+  geom_line(mapping = aes(x=t, y=test_total_fte.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=test_total_fte.2.), color = "blue")
+
+ggplot(data = prev_CL_data) +
+  geom_line(mapping = aes(x=t, y=test_prev_CL.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=test_prev_CL.2.), color = "blue")
+
+
+ggplot(data = J_data) +
+  geom_line(mapping = aes(x=t, y=J.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=JR.1.), color = "blue") +
+  geom_line(mapping = aes(x=t, y=J.2.), color = "orange") +
+  geom_line(mapping = aes(x=t, y=JR.2.), color = "green")
+
+ggplot(data = S_data) +
+  geom_line(mapping = aes(x=t, y=S.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=S.2.), color = "blue")
+
+ggplot(data = R_data) +
+  geom_line(mapping = aes(x=t, y=R.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=R.2.), color = "blue")
+
+ggplot(data = U_data) +
+  geom_line(mapping = aes(x=t, y=U.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=U.2.), color = "blue")
+
+
+
+
+ggplot(data = custody_ratio_data) +
+  geom_line(mapping = aes(x=t, y=test_custody_ratio.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=test_custody_ratio.2.), color = "blue")
+
 
 
 ggplot(data = incl_data) +
