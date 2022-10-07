@@ -96,6 +96,7 @@ child_recr = odin::odin({
   school_ex_i[] <- user(0) #rates of school exclusion, included
   school_ex_e[] <- user(0) #rates of school exclusion, excluded
 
+  impov <- user(0) #rates of school impoverishment, can be a neg number(?) maybe not...
 
   fte1[] <- user(0) #some kind of rate of included first time entrants
   fte2[] <- user(0) #some kind of rate of excluded first time entrants
@@ -459,37 +460,37 @@ child_recr = odin::odin({
 
   ##differential equations - INCLUSION#####################
   ##univolved
-  deriv(UN_1[]) <- (1-surv_in_i[i])*incl_in[i]*age_in[i] + desist*WN_1[i] - (missing_i[i]+ss_i[i])*UN_1[i] - fte1[i]*UN_1[i] - contact*recruit_1[i]*UN_1[i]*sum(mix1_r[,i]) - UN_1[i]*school_ex_i[i] - u1_out[i]
-  deriv(US_1[]) <- surv_in_i[i]*incl_in[i]*age_in[i] + (missing_i[i]+ss_i[i])*UN_1[i] + desist*WS_1[i] - contact*recruit_1[i]*US_1[i]*sum(mix1_r[,i]) - fte1[i]*surv_multiplier*US_1[i] - US_1[i]*school_ex_i[i] - us1_out[i]
-  deriv(UR_1[]) <- fte1[i]*(1-custody_fte[i])*(UN_1[i]+surv_multiplier*US_1[i]) + release_1[i] + desist*WR_1[i] - contact*recruit_1[i]*UR_1[i]*sum(mix1_r[,i]) - UR_1[i]*school_ex_i[i] - ur1_out[i]
+  deriv(UN_1[]) <- (1-surv_in_i[i])*incl_in[i]*age_in[i] + desist*WN_1[i] - (missing_i[i]+ss_i[i])*UN_1[i] - fte1[i]*UN_1[i] - contact*recruit_1[i]*UN_1[i]*sum(mix1_r[,i]) - UN_1[i]*(school_ex_i[i]+impov) - u1_out[i]
+  deriv(US_1[]) <- surv_in_i[i]*incl_in[i]*age_in[i] + (missing_i[i]+ss_i[i])*UN_1[i] + desist*WS_1[i] - contact*recruit_1[i]*US_1[i]*sum(mix1_r[,i]) - fte1[i]*surv_multiplier*US_1[i] - US_1[i]*(school_ex_i[i]+impov) - us1_out[i]
+  deriv(UR_1[]) <- fte1[i]*(1-custody_fte[i])*(UN_1[i]+surv_multiplier*US_1[i]) + release_1[i] + desist*WR_1[i] - contact*recruit_1[i]*UR_1[i]*sum(mix1_r[,i]) - UR_1[i]*(school_ex_i[i]+impov) - ur1_out[i]
   ##working
-  deriv(WN_1[]) <- contact*recruit_1[i]*UN_1[i]*sum(mix1_r[,i]) - (cl_multiplier*missing_i[i]+ss_i[i])*WN_1[i] - fte1[i]*WN_1[i] - desist*WN_1[i] - WN_1[i]*school_ex_i[i] - w1_out[i]
-  deriv(WS_1[]) <-contact*recruit_1[i]*US_1[i]*sum(mix1_r[,i]) + (cl_multiplier*missing_i[i]+ss_i[i])*WN_1[i] - desist*WS_1[i] - fte1[i]*surv_multiplier*WS_1[i] - WS_1[i]*school_ex_i[i] - ws1_out[i]
-  deriv(WR_1[]) <- contact*recruit_1[i]*UR_1[i]*sum(mix1_r[,i]) + fte1[i]*(1-custody_fte[i])*(WN_1[i]+surv_multiplier*WS_1[i]) + release_cl_1[i] - desist*WR_1[i]  - WR_1[i]*school_ex_i[i] - wr1_out[i]
+  deriv(WN_1[]) <- contact*recruit_1[i]*UN_1[i]*sum(mix1_r[,i]) - (cl_multiplier*missing_i[i]+ss_i[i])*WN_1[i] - fte1[i]*WN_1[i] - desist*WN_1[i] - WN_1[i]*(school_ex_i[i]+impov) - w1_out[i]
+  deriv(WS_1[]) <-contact*recruit_1[i]*US_1[i]*sum(mix1_r[,i]) + (cl_multiplier*missing_i[i]+ss_i[i])*WN_1[i] - desist*WS_1[i] - fte1[i]*surv_multiplier*WS_1[i] - WS_1[i]*(school_ex_i[i]+impov) - ws1_out[i]
+  deriv(WR_1[]) <- contact*recruit_1[i]*UR_1[i]*sum(mix1_r[,i]) + fte1[i]*(1-custody_fte[i])*(WN_1[i]+surv_multiplier*WS_1[i]) + release_cl_1[i] - desist*WR_1[i]  - WR_1[i]*(school_ex_i[i]+impov) - wr1_out[i]
 
   ##jailed (remand and sentenced)
-  deriv(JR_1[]) <- remand*(fte_1[i] + rep_1[i]) - end_rem*JR_1[i] - contact*recruit_j[i]*cl_pc[i]*JR_1[i] - jr1_out[i]
-  deriv(JRW_1[]) <- remand*(fte_cl_1[i] + rep_cl_1[i]) + contact*recruit_j[i]*cl_pc[i]*JR_1[i] - end_rem*JRW_1[i] - jrw1_out[i]
+  deriv(JR_1[]) <- remand*(fte_1[i] + rep_1[i]) - end_rem*JR_1[i] - contact*recruit_j[i]*cl_pc[i]*JR_1[i] - impov*JR_1[i] - jr1_out[i]
+  deriv(JRW_1[]) <- remand*(fte_cl_1[i] + rep_cl_1[i]) + contact*recruit_j[i]*cl_pc[i]*JR_1[i] - end_rem*JRW_1[i] - impov*JRW_1[i] - jrw1_out[i]
 
-  deriv(J_1[]) <- (1-remand)*(custody_fte[i]*fte_1[i] + custody_rep[i]*rep_1[i]) + r2c*end_rem*JR_1[i] + deter*JW_1[i] - end_cust*J_1[i] - contact*recruit_j[i]*cl_pc[i]*J_1[i] - j1_out[i]
-  deriv(JW_1[]) <- (1-remand)*(custody_fte[i]*fte_cl_1[i] + custody_rep[i]*rep_cl_1[i]) + r2c*end_rem*JRW_1[i] + contact*recruit_j[i]*cl_pc[i]*J_1[i] - deter*JW_1[i] - end_cust*JW_1[i] - jw1_out[i]
+  deriv(J_1[]) <- (1-remand)*(custody_fte[i]*fte_1[i] + custody_rep[i]*rep_1[i]) + r2c*end_rem*JR_1[i] + deter*JW_1[i] - end_cust*J_1[i] - contact*recruit_j[i]*cl_pc[i]*J_1[i] - impov*J_1[i] - j1_out[i]
+  deriv(JW_1[]) <- (1-remand)*(custody_fte[i]*fte_cl_1[i] + custody_rep[i]*rep_cl_1[i]) + r2c*end_rem*JRW_1[i] + contact*recruit_j[i]*cl_pc[i]*J_1[i] - deter*JW_1[i] - end_cust*JW_1[i] - impov*JW_1[i] - jw1_out[i]
 
 
   ##differential equations - EXCLUSION#####################
   ##univolved
-  deriv(UN_2[]) <- (1-surv_in_e[i])*excl_in[i]*age_in[i] + desist*WN_2[i] - (missing_e[i]+ss_e[i])*UN_2[i] - fte2[i]*UN_2[i] - contact*recruit_2[i]*U_2[i]*sum(mix2_r[,i]) - u2_out[i]
-  deriv(US_2[]) <- surv_in_e[i]*excl_in[i]*age_in[i] + (missing_e[i]+ss_e[i])*UN_2[i] + desist*WS_2[i] - contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i]) - fte2[i]*surv_multiplier*US_2[i] - us2_out[i]
-  deriv(UR_2[]) <- fte2[i]*(1-custody_fte[i])*(UN_2[i]+surv_multiplier*US_2[i]) + release_2[i] + desist*WR_2[i] - contact*recruit_2[i]*UR_2[i]*sum(mix2_r[,i]) - ur2_out[i]
+  deriv(UN_2[]) <- impov*UN_1[i] + (1-surv_in_e[i])*excl_in[i]*age_in[i] + desist*WN_2[i] - (missing_e[i]+ss_e[i])*UN_2[i] - fte2[i]*UN_2[i] - contact*recruit_2[i]*U_2[i]*sum(mix2_r[,i]) - u2_out[i]
+  deriv(US_2[]) <- impov*US_1[i] + surv_in_e[i]*excl_in[i]*age_in[i] + (missing_e[i]+ss_e[i])*UN_2[i] + desist*WS_2[i] - contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i]) - fte2[i]*surv_multiplier*US_2[i] - us2_out[i]
+  deriv(UR_2[]) <-impov* UR_1[i] + fte2[i]*(1-custody_fte[i])*(UN_2[i]+surv_multiplier*US_2[i]) + release_2[i] + desist*WR_2[i] - contact*recruit_2[i]*UR_2[i]*sum(mix2_r[,i]) - ur2_out[i]
   ##working
-  deriv(WN_2[]) <- contact*recruit_2[i]*UN_2[i]*sum(mix2_r[,i]) - fte2[i]*WN_2[i] - (cl_multiplier*missing_e[i]+ss_e[i])*WN_2[i] - desist*WN_2[i] - w2_out[i]
-  deriv(WS_2[]) <- contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i]) + (cl_multiplier*missing_e[i]+ss_e[i])*WN_2[i] - desist*WS_2[i] - fte2[i]*surv_multiplier*WS_2[i] - ws2_out[i]
-  deriv(WR_2[]) <- contact*recruit_2[i]*UR_2[i]*sum(mix2_r[,i]) + fte2[i]*(1-custody_fte[i])*(WN_2[i]+surv_multiplier*WS_2[i]) + release_cl_2[i] - desist*WR_2[i] - wr2_out[i]
+  deriv(WN_2[]) <-impov* WN_1[i] + contact*recruit_2[i]*UN_2[i]*sum(mix2_r[,i]) - fte2[i]*WN_2[i] - (cl_multiplier*missing_e[i]+ss_e[i])*WN_2[i] - desist*WN_2[i] - w2_out[i]
+  deriv(WS_2[]) <- impov*WS_1[i] + contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i]) + (cl_multiplier*missing_e[i]+ss_e[i])*WN_2[i] - desist*WS_2[i] - fte2[i]*surv_multiplier*WS_2[i] - ws2_out[i]
+  deriv(WR_2[]) <- impov*WR_1[i] + contact*recruit_2[i]*UR_2[i]*sum(mix2_r[,i]) + fte2[i]*(1-custody_fte[i])*(WN_2[i]+surv_multiplier*WS_2[i]) + release_cl_2[i] - desist*WR_2[i] - wr2_out[i]
   ##jailed (remand and sentenced)
-  deriv(JR_2[]) <- remand*(fte_2[i] + rep_2[i]) - end_rem*JR_2[i] - contact*recruit_j[i]*cl_pc[i]*JR_2[i] - jr2_out[i]
-  deriv(JRW_2[]) <- remand*(fte_cl_2[i] + rep_cl_2[i]) + contact*recruit_j[i]*cl_pc[i]*JR_2[i] - end_rem*JRW_2[i] - jrw2_out[i]
+  deriv(JR_2[]) <- impov*JR_1[i] + remand*(fte_2[i] + rep_2[i]) - end_rem*JR_2[i] - contact*recruit_j[i]*cl_pc[i]*JR_2[i] - jr2_out[i]
+  deriv(JRW_2[]) <- impov*JRW_1[i] + remand*(fte_cl_2[i] + rep_cl_2[i]) + contact*recruit_j[i]*cl_pc[i]*JR_2[i] - end_rem*JRW_2[i] - jrw2_out[i]
 
-  deriv(J_2[]) <- (1-remand)*(custody_fte[i]*fte_2[i] + custody_rep[i]*rep_2[i]) + r2c*end_rem*JR_2[i] + deter*JW_2[i] - end_cust*J_2[i] - contact*recruit_j[i]*cl_pc[i]*J_2[i] - j2_out[i]
-  deriv(JW_2[]) <- (1-remand)*(custody_fte[i]*fte_cl_2[i] + custody_rep[i]*rep_cl_2[i]) + r2c*end_rem*JRW_2[i] + contact*recruit_j[i]*cl_pc[i]*J_2[i] - deter*JW_2[i] - end_cust*JW_2[i] - jw2_out[i]
+  deriv(J_2[]) <- impov*J_1[i] + (1-remand)*(custody_fte[i]*fte_2[i] + custody_rep[i]*rep_2[i]) + r2c*end_rem*JR_2[i] + deter*JW_2[i] - end_cust*J_2[i] - contact*recruit_j[i]*cl_pc[i]*J_2[i] - j2_out[i]
+  deriv(JW_2[]) <- impov*JW_1[i] + (1-remand)*(custody_fte[i]*fte_cl_2[i] + custody_rep[i]*rep_cl_2[i]) + r2c*end_rem*JRW_2[i] + contact*recruit_j[i]*cl_pc[i]*J_2[i] - deter*JW_2[i] - end_cust*JW_2[i] - jw2_out[i]
 
   ##differential equations - CLOSE PROXIMITY -#####################
   ##univolved
@@ -671,6 +672,7 @@ pars <- list(x = rbind(c(0.8, 0.2), #first row is group 1's mixing group 1,2,3,4
              rep = c(0.002,0.001), #some kind of rate of repeated offences (should work out as like 452
              school_ex_i = c(0.009615385,0.004807692), #rc(0,0),#ates of school exclusion, included
              school_ex_e = c(0.05769231,0.01923077), #c(0,0),
+             impov = 0.0003205128, #pretty steep impoverishment rate of like 1 pc of pop a year or something like that?
              u1_out = c(0,0),  #percentage of exiters leaving from this state, boy and girl
              us1_out = c(0,0),
              ur1_out = c(0,0),
