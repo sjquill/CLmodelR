@@ -1,4 +1,21 @@
 
+##will i say only involved kids go missing? like that's how police notice kids?
+##so we've got TriED and then sen_cust (90 kids in birmingham per year) and CHARGED and then rem_cust
+##and we've got TriED and then sen_rest (880 kids per year) and CHARGED and then rem_rest
+
+
+
+
+#TASKS
+#1. FIX RECRUITMENT - i took out mixing from jail, what else was there......nothing?
+#2. FIX JAIL MIXING - so no one out of jail mixes with those in - DONE - second is set up recruitment in jail
+# could i do this with ONE SINGLE NEW OD EQation that just keeps track of number of CL in Cusdtody???..prob not...ok lol i think you need 4 jail eqs!!!
+#wait lol, what about jail as a deterrant? (ha) - ok added
+#3. MAKE FLOWS BETWEEN CLASS STATES
+
+WAIT - JAIL MIXING ISNT DONE because i forgot about the other people in jail.... from outside birmingham
+
+
 ##going_in: custody_fte*(1-remand)*fte_1[i]  remand*fte_1[i],   remand*rep_1[i]  custody_rep*(1-remand)*rep_1[i]
 ##you get charged - if you're already in the CSJ then theres this bit where the people who get remanded
 ##flow out instantly and the people who dont flow out like a month or so later (if they get a custodial sentence)
@@ -37,7 +54,17 @@ cl[i] <- cl[i-1] *
   d_CL <- contact*recruit_j[i]*cl_pc*(1-cl_pc[i])*J[i]
 
 
-new_rec_cl[i] <- contact*recruit_j[i]*cl_pc*(1-cl_pc[i])*J[i]
+new_rec_cl[i] <- contact*recruit_j[i]*cl_pc[i]*(J_1[i] or JR_1)
+
+mix is prop CL in jail cl_pc[i]
+
+cl_pc[i] <- (JRW_1,2,3[i] + JW_1,2,3[i])/ (JR_1[i] + JRW_1[i] + J_1[i] + JW_1[i])
+
+
+
+
+JR_1[] + JRW_1[]
+J_1[] JW_1[]
 
 mix_j[,i] <- cl_pc[i]*z[j,i]
 
@@ -50,3 +77,26 @@ y <- x*(1-x)
 y
 
 ##cl_pc*(1-cl_pc[i]) <- this term is biggest when its exactly half and half, which makes sense
+
+
+
+#wait lol, what about jail as a deterrant? (ha)
+so everyone still goes back to R because you cant leave the CSJ once youre in it
+but who goes to WR and who goes to UR!!!
+
+  what about, a certain number who enter jail immediately quit on entering & dont take part in the recruitment mixing
+
+we had a redicivism thing happening
++ (1-red)*release*JCL_1[i]
+
+or... you can 'desist' in jail - as in you resolve not to take part anymore
+
+
+deter
+
+we also used to have this desistence after first harm.
+
++ d*h[i]*W_1[i]
+
+
+
