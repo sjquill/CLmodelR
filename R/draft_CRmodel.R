@@ -2,22 +2,26 @@
 library(odin)
 library(ggplot2)
 
+
+##need to have a tighter control on our entrances and exits lol...
+##why is pop exploding...
+
 child_recr = odin::odin({
   ##TIME STEPS IS WEEKS
 
-  ##number of social/ gender classes
+  ##number of gender classes
   N_gender <- user(2)
 
   #kids coming in - total 7336 girls and 7842 boys yearly - so 141 girls and 151 boys weekly
   #they come in in a block and then we send them to their states by dividing up percentages
   age_in[] <- user(0) # should be set to [151, 141]
 
-  excl_in[] <- user(0) #class breakdown - pc girls, boys excluded
-  close_in[] <- user(0) #class breakdown - pc girls, boys close
+  excl_in[] <- user(0) #class breakdown - pc boys, girls excluded
+  close_in[] <- user(0) #class breakdown - pc boys, girls close
 
-  surv_in_i[] <- user(0) #pc of girls, boys in INCLUDED that are surveilled at 10
-  surv_in_e[] <- user(0.07) #pc of girls, boys in EXCLUDED that are surveilled at 10
-  surv_in_c[] <- user(1) #pc of girls, boys in CLOSE that are surveilled at 10
+  surv_in_i[] <- user(0) #pc of boys, girls in INCLUDED that are surveilled at 10
+  surv_in_e[] <- user(0.07) #pc of boys, girls in EXCLUDED that are surveilled at 10
+  surv_in_c[] <- user(1) #pc of boys, girls in CLOSE that are surveilled at 10
 
 
   #kids coming OUT oh lol this is going to be so hard.....
@@ -57,7 +61,7 @@ child_recr = odin::odin({
   x[,] <- user(0)
 
 
-  contact <- user(70) #contact rate per week - ten a day for 7 days?
+  contact <- user(21) #contact rate per week - ten a day for 7 days?
 
   recruit_1[] <- user(0.001) #recruitment per contact? included -  you need 1000 contacts
   recruit_2[] <- user(0.002) #recruitment per contact? excluded - you need 500 contacts
@@ -65,17 +69,17 @@ child_recr = odin::odin({
   recruit_j[] <- user(0.005) #recruitment per contact? in jail - you need 200 contacts|?
 
   #d <- user(0.05) #probability of desisting at a critical point eg hospitalisation after an injury
-  desist <- user(0.001) #probability of desisting at other times
+  desist <- user(0.000) #probability of desisting at other times
 
   #arrest <- user(0.02) #rate of arrest bc of county lines involvement for the working group
 
   missing_i[] <- user(0) #rate of missing episodes for the included group
-  missing_e[] <- user(0.005) #rate of missing episodes for the excluded group
-  missing_c[] <- user(0.005) #rate of missing episodes for the close group
+  missing_e[] <- user(0.00) #rate of missing episodes for the excluded group
+  missing_c[] <- user(0.00) #rate of missing episodes for the close group
 
-  ss_i[] <- user(0.005) #rate of stop&search for the included group
-  ss_e[] <- user(0.005) #rate of stop&search  for the excluded group
-  ss_c[] <- user(0.005) #rate of stop&search  for the close group
+  ss_i[] <- user(0.000) #rate of stop&search for the included group
+  ss_e[] <- user(0.00) #rate of stop&search  for the excluded group
+  ss_c[] <- user(0.000) #rate of stop&search  for the close group
 
   # red <- user(0.637) #recidivism rate - For children released from custody in the year ending March 2020, 63.7%  re-offended
   # mortality <- user(0) #death rate from causes other than county lines
@@ -89,8 +93,8 @@ child_recr = odin::odin({
   end_cust <- user(0.05) #rate that sets the length of the custodial sentence - meant to be 139 so lets say 20 weeks, 1/20
 
 
-  surv_multiplier <- user(1.5) #figure this out properly but its some sort of elevated risk of criminalisation that you get from beign already known to the police
-  cl_multiplier <- user(1.2) #some elevated risk of going missing, getting cautioned/sentenced etc if you're working CL (20%)
+  surv_multiplier <- user(1.1) #figure this out properly but its some sort of elevated risk of criminalisation that you get from beign already known to the police
+  cl_multiplier <- user(1) #some elevated risk of going missing, getting cautioned/sentenced etc if you're working CL (20%)
 
 
   school_ex_i[] <- user(0) #rates of school exclusion, included
@@ -295,6 +299,20 @@ child_recr = odin::odin({
   dim(test_custody_ratio) <- N_gender
   dim(test_total_fte) <- N_gender
   dim(test_total_rep) <- N_gender
+  dim(test_check) <- N_gender
+
+  dim(test_1) <- N_gender
+  dim(test_2) <- N_gender
+  dim(test_2.5) <- N_gender
+  dim(test_2.6) <- N_gender
+  dim(test_2.7) <- N_gender
+  dim(test_2.8) <- N_gender
+  dim(test_3) <- N_gender
+  dim(test_4) <- N_gender
+  dim(test_5) <- N_gender
+  dim(test_6) <- N_gender
+  dim(test_7) <- N_gender
+
 
   dim(II) <- N_gender
   dim(IE) <- N_gender
@@ -403,9 +421,9 @@ child_recr = odin::odin({
 
   ##intermediate quantities
 
-  N_1[] <- U_1[i] + US_1[i]  + UR_1[i] + W_1[i] + WS_1[i] + WR_1[i] + J_1[i] + JW_1[i] + JR_1[i] + JRW_1[i] ##total numbers in included class
-  N_2[] <- U_2[i] + US_2[i]  + UR_2[i] + W_2[i] + WS_2[i] + WR_2[i] + J_2[i] + JW_2[i] + JR_2[i] + JRW_2[i]
-  N_3[] <- U_3[i] + US_3[i]  + UR_3[i] + W_3[i] + WS_3[i] + WR_3[i] + J_3[i] + JW_3[i] + JR_3[i] + JRW_3[i]
+  N_1[] <- UN_1[i] + US_1[i]  + UR_1[i] + WN_1[i] + WS_1[i] + WR_1[i] + J_1[i] + JW_1[i] + JR_1[i] + JRW_1[i] ##total numbers in included class
+  N_2[] <- UN_2[i] + US_2[i]  + UR_2[i] + WN_2[i] + WS_2[i] + WR_2[i] + J_2[i] + JW_2[i] + JR_2[i] + JRW_2[i]
+  N_3[] <- UN_3[i] + US_3[i]  + UR_3[i] + WN_3[i] + WS_3[i] + WR_3[i] + J_3[i] + JW_3[i] + JR_3[i] + JRW_3[i]
   N[] <- N_1[i] + N_2[i] + N_3[i]
 
   U_1[] <- UN_1[i] + US_1[i] + UR_1[i]
@@ -462,51 +480,51 @@ child_recr = odin::odin({
   ##univolved
   deriv(UN_1[]) <- (1-surv_in_i[i])*incl_in[i]*age_in[i] + desist*WN_1[i] - (missing_i[i]+ss_i[i])*UN_1[i] - fte1[i]*UN_1[i] - contact*recruit_1[i]*UN_1[i]*sum(mix1_r[,i]) - UN_1[i]*(school_ex_i[i]+impov) - u1_out[i]
   deriv(US_1[]) <- surv_in_i[i]*incl_in[i]*age_in[i] + (missing_i[i]+ss_i[i])*UN_1[i] + desist*WS_1[i] - contact*recruit_1[i]*US_1[i]*sum(mix1_r[,i]) - fte1[i]*surv_multiplier*US_1[i] - US_1[i]*(school_ex_i[i]+impov) - us1_out[i]
-  deriv(UR_1[]) <- fte1[i]*(1-custody_fte[i])*(UN_1[i]+surv_multiplier*US_1[i]) + release_1[i] + desist*WR_1[i] - contact*recruit_1[i]*UR_1[i]*sum(mix1_r[,i]) - UR_1[i]*(school_ex_i[i]+impov) - ur1_out[i]
+  deriv(UR_1[]) <- fte1[i]*(UN_1[i]+surv_multiplier*US_1[i]) + release_1[i] + desist*WR_1[i] - contact*recruit_1[i]*UR_1[i]*sum(mix1_r[,i]) - UR_1[i]*(school_ex_i[i]+impov) - ur1_out[i]
   ##working
-  deriv(WN_1[]) <- contact*recruit_1[i]*UN_1[i]*sum(mix1_r[,i]) - (cl_multiplier*missing_i[i]+ss_i[i])*WN_1[i] - fte1[i]*WN_1[i] - desist*WN_1[i] - WN_1[i]*(school_ex_i[i]+impov) - w1_out[i]
-  deriv(WS_1[]) <-contact*recruit_1[i]*US_1[i]*sum(mix1_r[,i]) + (cl_multiplier*missing_i[i]+ss_i[i])*WN_1[i] - desist*WS_1[i] - fte1[i]*surv_multiplier*WS_1[i] - WS_1[i]*(school_ex_i[i]+impov) - ws1_out[i]
-  deriv(WR_1[]) <- contact*recruit_1[i]*UR_1[i]*sum(mix1_r[,i]) + fte1[i]*(1-custody_fte[i])*(WN_1[i]+surv_multiplier*WS_1[i]) + release_cl_1[i] - desist*WR_1[i]  - WR_1[i]*(school_ex_i[i]+impov) - wr1_out[i]
+  deriv(WN_1[]) <- contact*recruit_1[i]*UN_1[i]*sum(mix1_r[,i]) - (cl_multiplier*missing_i[i]+ss_i[i])*WN_1[i] - fte1[i]*WN_1[i] - desist*WN_1[i] - WN_1[i]*(cl_multiplier*school_ex_i[i]+impov) - w1_out[i]
+  deriv(WS_1[]) <- contact*recruit_1[i]*US_1[i]*sum(mix1_r[,i]) + (cl_multiplier*missing_i[i]+ss_i[i])*WN_1[i] - desist*WS_1[i] - fte1[i]*surv_multiplier*WS_1[i] - WS_1[i]*(cl_multiplier*school_ex_i[i]+impov) - ws1_out[i]
+  deriv(WR_1[]) <- contact*recruit_1[i]*UR_1[i]*sum(mix1_r[,i]) + fte1[i]*(WN_1[i]+surv_multiplier*WS_1[i]) + release_cl_1[i] - desist*WR_1[i]  - WR_1[i]*(cl_multiplier*school_ex_i[i]+impov) - wr1_out[i]
 
   ##jailed (remand and sentenced)
-  deriv(JR_1[]) <- remand*(fte_1[i] + rep_1[i]) - end_rem*JR_1[i] - contact*recruit_j[i]*cl_pc[i]*JR_1[i] - impov*JR_1[i] - jr1_out[i]
-  deriv(JRW_1[]) <- remand*(fte_cl_1[i] + rep_cl_1[i]) + contact*recruit_j[i]*cl_pc[i]*JR_1[i] - end_rem*JRW_1[i] - impov*JRW_1[i] - jrw1_out[i]
+  deriv(JR_1[]) <- remand*rep_1[i] - end_rem*JR_1[i] - contact*recruit_j[i]*cl_pc[i]*JR_1[i] - impov*JR_1[i] - jr1_out[i]
+  deriv(JRW_1[]) <- remand*rep_cl_1[i] + contact*recruit_j[i]*cl_pc[i]*JR_1[i] - end_rem*JRW_1[i] - impov*JRW_1[i] - jrw1_out[i]
 
-  deriv(J_1[]) <- (1-remand)*(custody_fte[i]*fte_1[i] + custody_rep[i]*rep_1[i]) + r2c*end_rem*JR_1[i] + deter*JW_1[i] - end_cust*J_1[i] - contact*recruit_j[i]*cl_pc[i]*J_1[i] - impov*J_1[i] - j1_out[i]
-  deriv(JW_1[]) <- (1-remand)*(custody_fte[i]*fte_cl_1[i] + custody_rep[i]*rep_cl_1[i]) + r2c*end_rem*JRW_1[i] + contact*recruit_j[i]*cl_pc[i]*J_1[i] - deter*JW_1[i] - end_cust*JW_1[i] - impov*JW_1[i] - jw1_out[i]
+  deriv(J_1[]) <- (1-remand)*custody_rep[i]*rep_1[i] + r2c*end_rem*JR_1[i] + deter*JW_1[i] - end_cust*J_1[i] - contact*recruit_j[i]*cl_pc[i]*J_1[i] - impov*J_1[i] - j1_out[i]
+  deriv(JW_1[]) <- (1-remand)*custody_rep[i]*rep_cl_1[i] + r2c*end_rem*JRW_1[i] + contact*recruit_j[i]*cl_pc[i]*J_1[i] - deter*JW_1[i] - end_cust*JW_1[i] - impov*JW_1[i] - jw1_out[i]
 
 
   ##differential equations - EXCLUSION#####################
   ##univolved
-  deriv(UN_2[]) <- impov*UN_1[i] + (1-surv_in_e[i])*excl_in[i]*age_in[i] + desist*WN_2[i] - (missing_e[i]+ss_e[i])*UN_2[i] - fte2[i]*UN_2[i] - contact*recruit_2[i]*U_2[i]*sum(mix2_r[,i]) - u2_out[i]
-  deriv(US_2[]) <- impov*US_1[i] + surv_in_e[i]*excl_in[i]*age_in[i] + (missing_e[i]+ss_e[i])*UN_2[i] + desist*WS_2[i] - contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i]) - fte2[i]*surv_multiplier*US_2[i] - us2_out[i]
-  deriv(UR_2[]) <-impov* UR_1[i] + fte2[i]*(1-custody_fte[i])*(UN_2[i]+surv_multiplier*US_2[i]) + release_2[i] + desist*WR_2[i] - contact*recruit_2[i]*UR_2[i]*sum(mix2_r[,i]) - ur2_out[i]
+  deriv(UN_2[]) <- impov*UN_1[i] + (1-surv_in_e[i])*excl_in[i]*age_in[i] + desist*WN_2[i] - (missing_e[i]+ss_e[i])*UN_2[i] - fte2[i]*UN_2[i] - contact*recruit_2[i]*U_2[i]*sum(mix2_r[,i]) - UN_2[i]*school_ex_e[i] - u2_out[i]
+  deriv(US_2[]) <- impov*US_1[i] + surv_in_e[i]*excl_in[i]*age_in[i] + (missing_e[i]+ss_e[i])*UN_2[i] + desist*WS_2[i] - contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i]) - fte2[i]*surv_multiplier*US_2[i] - US_2[i]*school_ex_e[i] - us2_out[i]
+  deriv(UR_2[]) <- impov*UR_1[i] + fte2[i]*(UN_2[i]+surv_multiplier*US_2[i]) + release_2[i] + desist*WR_2[i] - contact*recruit_2[i]*UR_2[i]*sum(mix2_r[,i]) - UR_2[i]*school_ex_e[i] - ur2_out[i]
   ##working
-  deriv(WN_2[]) <-impov* WN_1[i] + contact*recruit_2[i]*UN_2[i]*sum(mix2_r[,i]) - fte2[i]*WN_2[i] - (cl_multiplier*missing_e[i]+ss_e[i])*WN_2[i] - desist*WN_2[i] - w2_out[i]
-  deriv(WS_2[]) <- impov*WS_1[i] + contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i]) + (cl_multiplier*missing_e[i]+ss_e[i])*WN_2[i] - desist*WS_2[i] - fte2[i]*surv_multiplier*WS_2[i] - ws2_out[i]
-  deriv(WR_2[]) <- impov*WR_1[i] + contact*recruit_2[i]*UR_2[i]*sum(mix2_r[,i]) + fte2[i]*(1-custody_fte[i])*(WN_2[i]+surv_multiplier*WS_2[i]) + release_cl_2[i] - desist*WR_2[i] - wr2_out[i]
+  deriv(WN_2[]) <- impov*WN_1[i] + contact*recruit_2[i]*UN_2[i]*sum(mix2_r[,i]) - fte2[i]*WN_2[i] - (cl_multiplier*missing_e[i]+ss_e[i])*WN_2[i] - desist*WN_2[i] - WN_2[i]*cl_multiplier*school_ex_e[i] - w2_out[i]
+  deriv(WS_2[]) <- impov*WS_1[i] + contact*recruit_2[i]*US_2[i]*sum(mix2_r[,i]) + (cl_multiplier*missing_e[i]+ss_e[i])*WN_2[i] - desist*WS_2[i] - fte2[i]*surv_multiplier*WS_2[i] - WS_2[i]*cl_multiplier*school_ex_e[i] - ws2_out[i]
+  deriv(WR_2[]) <- impov*WR_1[i] + contact*recruit_2[i]*UR_2[i]*sum(mix2_r[,i]) + fte2[i]*(WN_2[i]+surv_multiplier*WS_2[i]) + release_cl_2[i] - desist*WR_2[i] - WR_2[i]*cl_multiplier*school_ex_e[i] - wr2_out[i]
   ##jailed (remand and sentenced)
-  deriv(JR_2[]) <- impov*JR_1[i] + remand*(fte_2[i] + rep_2[i]) - end_rem*JR_2[i] - contact*recruit_j[i]*cl_pc[i]*JR_2[i] - jr2_out[i]
-  deriv(JRW_2[]) <- impov*JRW_1[i] + remand*(fte_cl_2[i] + rep_cl_2[i]) + contact*recruit_j[i]*cl_pc[i]*JR_2[i] - end_rem*JRW_2[i] - jrw2_out[i]
+  deriv(JR_2[]) <- impov*JR_1[i] + remand*rep_2[i] - end_rem*JR_2[i] - contact*recruit_j[i]*cl_pc[i]*JR_2[i] - jr2_out[i]
+  deriv(JRW_2[]) <- impov*JRW_1[i] + remand*rep_cl_2[i] + contact*recruit_j[i]*cl_pc[i]*JR_2[i] - end_rem*JRW_2[i] - jrw2_out[i]
 
-  deriv(J_2[]) <- impov*J_1[i] + (1-remand)*(custody_fte[i]*fte_2[i] + custody_rep[i]*rep_2[i]) + r2c*end_rem*JR_2[i] + deter*JW_2[i] - end_cust*J_2[i] - contact*recruit_j[i]*cl_pc[i]*J_2[i] - j2_out[i]
-  deriv(JW_2[]) <- impov*JW_1[i] + (1-remand)*(custody_fte[i]*fte_cl_2[i] + custody_rep[i]*rep_cl_2[i]) + r2c*end_rem*JRW_2[i] + contact*recruit_j[i]*cl_pc[i]*J_2[i] - deter*JW_2[i] - end_cust*JW_2[i] - jw2_out[i]
+  deriv(J_2[]) <- impov*J_1[i] + (1-remand)*custody_rep[i]*rep_2[i] + r2c*end_rem*JR_2[i] + deter*JW_2[i] - end_cust*J_2[i] - contact*recruit_j[i]*cl_pc[i]*J_2[i] - j2_out[i]
+  deriv(JW_2[]) <- impov*JW_1[i] + (1-remand)*custody_rep[i]*rep_cl_2[i] + r2c*end_rem*JRW_2[i] + contact*recruit_j[i]*cl_pc[i]*J_2[i] - deter*JW_2[i] - end_cust*JW_2[i] - jw2_out[i]
 
   ##differential equations - CLOSE PROXIMITY -#####################
   ##univolved
   deriv(UN_3[]) <- ex_n[i] + (1-surv_in_c[i])*close_in[i]*age_in[i] + desist*WN_3[i] - (missing_c[i]+ss_c[i])*UN_3[i] - fte3[i]*UN_3[i] - contact*recruit_3[i]*UN_3[i]*sum(mix3_r[,i]) - u3_out[i]
   deriv(US_3[]) <- ex_s[i] + surv_in_c[i]*close_in[i]*age_in[i] + (missing_c[i]+ss_c[i])*UN_3[i] + desist*WS_3[i] - contact*recruit_3[i]*US_3[i]*sum(mix3_r[,i]) - fte3[i]*surv_multiplier*US_3[i] - us3_out[i]
-  deriv(UR_3[]) <- ex_r[i] + fte3[i]*(1-custody_fte[i])*(UN_3[i]+surv_multiplier*US_3[i]) + release_3[i] + desist*WR_3[i] - contact*recruit_3[i]*UR_3[i]*sum(mix3_r[,i]) - ur3_out[i]
+  deriv(UR_3[]) <- ex_r[i] + fte3[i]*(UN_3[i]+surv_multiplier*US_3[i]) + release_3[i] + desist*WR_3[i] - contact*recruit_3[i]*UR_3[i]*sum(mix3_r[,i]) - ur3_out[i]
   ##working
   deriv(WN_3[]) <- ex_cl_n[i] + contact*recruit_3[i]*UN_3[i]*sum(mix3_r[,i]) - (cl_multiplier*missing_c[i]+ss_c[i])*WN_3[i] - fte3[i]*WN_3[i] - desist*WN_3[i] - w3_out[i]
   deriv(WS_3[]) <- ex_cl_s[i] + contact*recruit_3[i]*US_3[i]*sum(mix3_r[,i]) + (cl_multiplier*missing_c[i]+ss_c[i])*WN_3[i] - desist*WS_3[i] - fte3[i]*surv_multiplier*WS_3[i] - ws3_out[i]
-  deriv(WR_3[]) <- ex_cl_r[i] + contact*recruit_3[i]*UR_3[i]*sum(mix3_r[,i]) + fte3[i]*(1-custody_fte[i])*(WN_3[i]+surv_multiplier*WS_3[i]) + release_cl_3[i] - desist*WR_3[i] - wr3_out[i]
+  deriv(WR_3[]) <- ex_cl_r[i] + contact*recruit_3[i]*UR_3[i]*sum(mix3_r[,i]) + fte3[i]*(WN_3[i]+surv_multiplier*WS_3[i]) + release_cl_3[i] - desist*WR_3[i] - wr3_out[i]
   ##jailed (remand and sentenced)
-  deriv(JR_3[]) <- remand*(fte_3[i] + rep_3[i]) - end_rem*JR_3[i] - contact*recruit_j[i]*cl_pc[i]*JR_3[i] - jr3_out[i]
-  deriv(JRW_3[]) <- remand*(fte_cl_3[i] + rep_cl_3[i]) + contact*recruit_j[i]*cl_pc[i]*JR_3[i] - end_rem*JRW_3[i] - jrw3_out[i]
+  deriv(JR_3[]) <- remand*rep_3[i] - end_rem*JR_3[i] - contact*recruit_j[i]*cl_pc[i]*JR_3[i] - jr3_out[i]
+  deriv(JRW_3[]) <- remand*rep_cl_3[i] + contact*recruit_j[i]*cl_pc[i]*JR_3[i] - end_rem*JRW_3[i] - jrw3_out[i]
 
-  deriv(J_3[]) <- (1-remand)*(custody_fte[i]*fte_3[i] + custody_rep[i]*rep_3[i]) + r2c*end_rem*JR_3[i] + deter*JW_3[i] - end_cust*J_3[i] - contact*recruit_j[i]*cl_pc[i]*J_3[i] - j3_out[i]
-  deriv(JW_3[]) <- (1-remand)*(custody_fte[i]*fte_cl_3[i] + custody_rep[i]*rep_cl_3[i]) + r2c*end_rem*JRW_3[i] + contact*recruit_j[i]*cl_pc[i]*J_3[i] - deter*JW_3[i] - end_cust*JW_3[i] - jw3_out[i]
+  deriv(J_3[]) <- (1-remand)*custody_rep[i]*rep_3[i] + r2c*end_rem*JR_3[i] + deter*JW_3[i] - end_cust*J_3[i] - contact*recruit_j[i]*cl_pc[i]*J_3[i] - j3_out[i]
+  deriv(JW_3[]) <- (1-remand)*custody_rep[i]*rep_cl_3[i] + r2c*end_rem*JRW_3[i] + contact*recruit_j[i]*cl_pc[i]*J_3[i] - deter*JW_3[i] - end_cust*JW_3[i] - jw3_out[i]
 
 
   #making the mixing matrix help
@@ -578,6 +596,13 @@ child_recr = odin::odin({
   #for example, 55% percent of cautions/sentences are of first time entrants to the CSJ
   #what about girl v boy dynamics...
 
+  #do way more outputs so that people can actually see whats happening
+  #like how many recruited
+  #how many get excluded from school
+  #basically what is the number in each of the flows.
+
+  #do something that's just all of the recruitment, like each flow of recruitment (to see the different times they all spike)
+
   test_prev_CL[] <- W[i]/N[i]
   #remand should be about 20% of total population in custody
   test_custody_ratio[] <- JR[i]/(JR[i] + J[i])
@@ -585,12 +610,64 @@ child_recr = odin::odin({
   test_total_rep[] <- rep_1[i] + rep_cl_1[i] + rep_2[i] + rep_cl_2[i] + rep_3[i] + rep_cl_3[i]
   test_total_fte[] <- fte_1[i] + fte_cl_1[i] + fte_2[i] + fte_cl_2[i] + fte_3[i] + fte_cl_3[i]
 
+  test_check[] <-  (1-surv_in_i[i])*incl_in[i]*age_in[i] + surv_in_i[i]*incl_in[i]*age_in[i] + (1-surv_in_e[i])*excl_in[i]*age_in[i] + surv_in_e[i]*excl_in[i]*age_in[i] + (1-surv_in_c[i])*close_in[i]*age_in[i] + surv_in_c[i]*close_in[i]*age_in[i]
+
+
+
+  test_1[] <- impov*WN_1[i]
+  test_2[] <- contact*recruit_2[i]*UN_2[i]*sum(mix2_r[,i]) #this goes to minus!! lol
+  test_2.5[] <- sum(mix2_r[,i])
+  test_2.6[] <- UN_2[i]
+  test_2.7[] <- contact
+  test_2.8[] <- recruit_2[i]
+
+
+
+  test_3[] <- -fte2[i]*WN_2[i]
+  test_4[] <- -(cl_multiplier*missing_e[i]+ss_e[i])*WN_2[i]
+  test_5[] <- -desist*WN_2[i]
+  test_6[] <- -WN_2[i]*cl_multiplier*school_ex_e[i]
+  test_7[] <-  -w2_out[i]
+
+
 
   ##generated quantities
   output(test_prev_CL) <- test_prev_CL
   output(test_custody_ratio) <- test_custody_ratio
   output(test_total_rep) <- test_total_rep
   output(test_total_fte) <- test_total_fte
+  output(test_1) <- test_1
+  output(test_2) <- test_2
+  output(test_2.5) <- test_2.5
+  output(test_2.6) <- test_2.6
+  output(test_2.7) <- test_2.7
+  output(test_2.8) <- test_2.8
+  output(test_3) <- test_3
+  output(test_4) <- test_4
+  output(test_5) <- test_5
+  output(test_6) <- test_6
+  output(test_7) <- test_7
+
+
+
+  output(II) <- II
+  output(IE) <- IE
+  output(IC) <- IC
+
+  output(EI) <- EI
+  output(EE) <- EE
+  output(EC) <- EC
+
+  output(CI) <- CI
+  output(CE) <- CE
+  output(CC) <- CC
+
+
+
+  output(N) <- N
+  output(N_1) <- N_1
+  output(N_2) <- N_2
+  output(N_3) <- N_3
   output(U) <- U
   output(U_1) <- U_1
   output(U_2) <- U_2
@@ -655,11 +732,11 @@ pars <- list(x = rbind(c(0.8, 0.2), #first row is group 1's mixing group 1,2,3,4
              surv_in_e = c(0.07,0.07), #pc of gboys, girls  in EXCLUDED that are surveilled at 10
              surv_in_c = c(0.6,0.5), #pc of boys, girls in CLOSE that are surveilled at 10
              missing_i = c(0,0), #rate of missing episodes for the included group
-             missing_e = c(0.003,0.003), #rate of missing episodes for the excluded group
-             missing_c = c(0.03,0.03), #rate of missing episodes for the close group
-             ss_i = c(0.00003529546,0.000002799211), #rate of stop&search for the included group
-             ss_e = c(0.001087095,0.00009400705), #rate of stop&search  for the excluded group
-             ss_c = c(0.003954082,0.0009812287), #rate of stop&search  for the close group
+             missing_e = c(0,0), #c(0.003,0.003), #rate of missing episodes for the excluded group
+             missing_c = c(0,0), #c(0.03,0.03), #rate of missing episodes for the close group
+             ss_i = c(0,0), #c(0.00003529546,0.000002799211), #rate of stop&search for the included group
+             ss_e = c(0,0), #c(0.001087095,0.00009400705), #rate of stop&search  for the excluded group
+             ss_c = c(0,0), #c(0.003954082,0.0009812287), #rate of stop&search  for the close group
              recruit_1 = c(0.0005,0.0001),
              recruit_2 = c(0.001,0.0009),
              recruit_3 = c(0.005,0.003),
@@ -670,9 +747,9 @@ pars <- list(x = rbind(c(0.8, 0.2), #first row is group 1's mixing group 1,2,3,4
              fte2 = c(0.0003351652,0.0001170569), #some kind of rate of excluded first time entrants
              fte3 = c(0.001219093,0.001214229), #some kind of rate of close first time entrants total (should work out as like 600 a year, 23% female 77% male)
              rep = c(0.002,0.001), #some kind of rate of repeated offences (should work out as like 452
-             school_ex_i = c(0.0009615385,0.0004807692), #rc(0,0),#ates of school exclusion, included
-             school_ex_e = c(0.005769231,0.001923077), #c(0,0),
-             impov = 0.003, # 0.0003205128 pretty steep impoverishment rate of like 1 pc of pop a year or something like that?
+             school_ex_i = c(0,0),#c(0.0009615385,0.0004807692), ,#ates of school exclusion, included
+             school_ex_e = c(0,0),#c(0.005769231,0.001923077), #c(0,0),
+             impov = 0, # 0.0003205128 pretty steep impoverishment rate of like 1 pc of pop a year or something like that?
              u1_out = c(0,0),  #percentage of exiters leaving from this state, boy and girl
              us1_out = c(0,0),
              ur1_out = c(0,0),
@@ -707,11 +784,96 @@ pars <- list(x = rbind(c(0.8, 0.2), #first row is group 1's mixing group 1,2,3,4
 
 
 
-
-
 mod <- child_recr(user = pars)
 t <- seq(0, 520, length.out = 1040)  #from 0 to 10 years, two steps a week or something
 CL_data <- as.data.frame(mod$run(t))
+
+test_data <- data.frame(CL_data[,grep('test_2',colnames(CL_data))])
+
+ggplot(data = test_data) +
+  geom_line(mapping = aes(x=t, y=test_2.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=test_2.2.), color = "orange")
+
+ggplot(data = test_data) +
+  geom_line(mapping = aes(x=t, y=test_2.5.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=test_2.5.2.), color = "orange") +
+  geom_line(mapping = aes(x=t, y=test_2.6.1.), color = "blue") + #dives from huge to under zero then back to zero where it stays
+  geom_line(mapping = aes(x=t, y=test_2.6.2.), color = "green") +
+  #geom_line(mapping = aes(x=t, y=test_2.7.1.), color = "pink") +
+  # geom_line(mapping = aes(x=t, y=test_2.7.2.), color = "purple") +
+geom_line(mapping = aes(x=t, y=test_2.8.1.), color = "yellow") +
+  geom_line(mapping = aes(x=t, y=test_2.8.2.), color = "black")
+#basically, the weird thing about WN_2 is coming from UN_2
+
+
+
+
+N_data <- data.frame(CL_data[,grep('N',colnames(CL_data))])
+
+I_data <- data.frame(CL_data[,grep('I',colnames(CL_data))])
+
+ggplot(data = I_data) +
+  geom_line(mapping = aes(x=t, y=II.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=II.2.), color = "blue") +
+  geom_line(mapping = aes(x=t, y=IE.1.), color = "orange") +
+  geom_line(mapping = aes(x=t, y=IE.2.), color = "green") +
+  geom_line(mapping = aes(x=t, y=IC.1.), color = "yellow") +
+  geom_line(mapping = aes(x=t, y=IC.2.), color = "purple")
+
+
+E_data <- data.frame(CL_data[,grep('E',colnames(CL_data))])
+
+ggplot(data = E_data) +
+  geom_line(mapping = aes(x=t, y=EI.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=EI.2.), color = "blue") +
+  geom_line(mapping = aes(x=t, y=EE.1.), color = "orange") +
+  geom_line(mapping = aes(x=t, y=EE.2.), color = "green") +
+  geom_line(mapping = aes(x=t, y=EC.1.), color = "yellow") + #HERE IS THE ISSUE - BOYS IN CLASS 3
+  geom_line(mapping = aes(x=t, y=EC.2.), color = "purple")
+
+
+C_data <- data.frame(CL_data[,grep('C',colnames(CL_data))])
+ggplot(data = C_data) +
+  geom_line(mapping = aes(x=t, y=CI.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=CI.2.), color = "blue") +
+  geom_line(mapping = aes(x=t, y=CE.1.), color = "orange") +
+  geom_line(mapping = aes(x=t, y=CE.2.), color = "green") +
+  geom_line(mapping = aes(x=t, y=CC.1.), color = "yellow") + #HERE IS THE ISSUE - BOYS IN CLASS 3
+  geom_line(mapping = aes(x=t, y=CC.2.), color = "purple")
+
+#THERE IS A PROBLEM LOL
+#WHY DOES THE POPULATION fall
+#i turned off school exclusion and impoverishment
+#ok so its leaking from excluded
+
+ggplot(data = N_data) +
+  geom_line(mapping = aes(x=t, y=N_1.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=N_1.2.), color = "blue") +
+  geom_line(mapping = aes(x=t, y=N_2.1.), color = "orange") +
+  geom_line(mapping = aes(x=t, y=N_2.2.), color = "green") +
+  geom_line(mapping = aes(x=t, y=N_3.1.), color = "yellow") + #HERE IS THE ISSUE - BOYS IN CLASS 3
+  geom_line(mapping = aes(x=t, y=N_3.2.), color = "purple") #and maybe the girls too
+
+
+
+ggplot(data = N_data) +
+  geom_line(mapping = aes(x=t, y=N.1.+N.2.), color = "red")
+
+ggplot(data = N_data) +
+  geom_line(mapping = aes(x=t, y=N.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=N.2.), color = "blue")
+
+ggplot(data = U_data) +
+  geom_line(mapping = aes(x=t, y=U.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=U.2.), color = "blue")
+
+ggplot(data = W_data) +
+  geom_line(mapping = aes(x=t, y=W.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=W.2.), color = "blue")
+
+ggplot(data = J_data) +
+  geom_line(mapping = aes(x=t, y=J.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=J.2.), color = "blue")
 
 
 U_data <- data.frame(CL_data[,grep('U',colnames(CL_data))])
@@ -745,6 +907,18 @@ ggplot(data = excl_data) +
   geom_line(mapping = aes(x=t, y=J_2.1.+JR_2.1.), color = "purple") +
   geom_line(mapping = aes(x=t, y=J_2.2.+JR_2.2.), color = "pink")
 
+
+ggplot(data = excl_data) +
+  geom_line(mapping = aes(x=t, y=WN_2.1.), color = "red") +
+  geom_line(mapping = aes(x=t, y=WN_2.2.), color = "blue") +
+  geom_line(mapping = aes(x=t, y=WS_2.1.), color = "orange") +
+  geom_line(mapping = aes(x=t, y=WS_2.2.), color = "green")+
+  geom_line(mapping = aes(x=t, y=WR_2.1.), color = "purple") +
+  geom_line(mapping = aes(x=t, y=WR_2.2.), color = "pink") +
+  geom_line(mapping = aes(x=t, y=J_2.1.+JR_2.1.), color = "black") +
+  geom_line(mapping = aes(x=t, y=J_2.2.+JR_2.2.), color = "grey")
+
+
 ggplot(data = close_data) +
   geom_line(mapping = aes(x=t, y=U_3.1.), color = "red") +
   geom_line(mapping = aes(x=t, y=W_3.1.), color = "blue") +
@@ -754,15 +928,6 @@ ggplot(data = close_data) +
   geom_line(mapping = aes(x=t, y=J_3.2.+JR_3.2.), color = "pink")
 
 
-
-
-ggplot(data = U_data) +
-  geom_line(mapping = aes(x=t, y=U_1.1.), color = "red") +
-  geom_line(mapping = aes(x=t, y=U_1.2.), color = "blue") +
-geom_line(mapping = aes(x=t, y=U_2.1.), color = "orange") +
-  geom_line(mapping = aes(x=t, y=U_2.2.), color = "green") +
-geom_line(mapping = aes(x=t, y=U_3.1.), color = "yellow") +
-  geom_line(mapping = aes(x=t, y=U_3.2.), color = "purple")
 
 ggplot(data = W_data) +
   geom_line(mapping = aes(x=t, y=W_1.1.), color = "red") +
