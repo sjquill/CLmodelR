@@ -24,19 +24,31 @@ susp_data <- susp_data %>%
   mutate(academic_year = paste(substr(susp_data$academic_year, start = 1, stop = 4),
                                substr(susp_data$academic_year, start = 5, stop = 6), sep = "-"))
 
+av_susp_durnum_data <- susp_data %>%
+  filter(la_name == "Birmingham", school_type != "Total") %>%
+  group_by(school_type) %>%
+  summarise(average_days_missed_susp = mean(average_days_missed_susp), average_number_susp = mean(average_number_susp)) %>%
+  kable("latex", booktabs = TRUE)
+
 susp_data %>%
   filter(la_name == "Birmingham", school_type != "Total") %>%
   ggplot() +
-  geom_line(aes(x = year, y = sessions_susp, colour = school_type)) +
+  geom_line(aes(x = year, y = average_days_missed_susp, colour = school_type)) +
   scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
   theme_classic() +
   theme(strip.background = element_blank())
 
-# what the fuck is suspensions
-check <- susp_data %>%
-  mutate(check = suspension/sessions_susp)
+susp_data %>%
+  filter(la_name == "Birmingham", school_type != "Total") %>%
+  ggplot() +
+  geom_line(aes(x = year, y = average_number_susp, colour = school_type)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_susp_number.png")
 
-# scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) +
 
 
 # ok actually this dataset is more relevant for me
@@ -381,24 +393,76 @@ school_data <- school_data %>%
   arrange(age)
 
 school_data %>%
-  filter(phase_type_grouping == "Pupil referral unit") %>%
+  filter(la_name == "Birmingham", phase_type_grouping == "Pupil referral unit", age %in% 10:16) %>%
+  mutate(age = as.factor(age)) %>%
   ggplot() +
   geom_line(aes(x = year, y = headcount, group = age, colour = age)) +
+  facet_wrap(~gender) +
   scale_x_continuous(name = "") +
   scale_y_continuous(name = "") +
   theme_classic() +
   theme(strip.background = element_blank()) +
   scale_colour_viridis(option = "viridis", discrete = TRUE)
-# ggsave(filename = "Output/Graphs/birm_excl_pru.png")
-
-
+ggsave(filename = "Output/Graphs/birm_headcount_pru_byagegender_yearly.png")
 
 school_data %>%
-  filter(la_name == "Birmingham") %>%
-  group_by(year) %>%
-  summarise(headcount = headcount)
+  filter(la_name == "Birmingham", phase_type_grouping == "Pupil referral unit", age %in% 10:16) %>%
+  group_by(age, gender) %>%
+  summarise(headcount = mean(headcount)) %>%
+  ggplot() +
+  geom_line(aes(x = age, y = headcount, group = gender, colour = gender)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_headcount_pru_byagegender.png")
+
+av_school_data <- school_data %>%
+  filter(la_name == "Birmingham", phase_type_grouping == "Pupil referral unit", age %in% 10:16) %>%
+  group_by(age, gender) %>%
+  summarise(headcount = mean(headcount)) %>%
+  kable("latex", booktabs = TRUE)
 
 
+############################################################################################################
+#######NEW DATA#######################################################################################################
+############################################################################################################
+readin_data <- read.csv("/Users/katehayes/temp_data/school-pupils-and-their-characteristics_2021-22 (1)/data/spc_pupils_fsm_20220701.csv")
+
+fsm_school_data <- readin_data
+names(fsm_school_data)[1] <- "academic_year"
+fsm_school_data <- fsm_school_data %>%
+  mutate(year = as.numeric(paste(substr(fsm_school_data$academic_year, start = 1, stop = 2),
+                                 substr(fsm_school_data$academic_year, start = 5, stop = 6), sep = ""))) %>%
+  mutate(academic_year = paste(substr(fsm_school_data$academic_year, start = 1, stop = 4),
+                               substr(fsm_school_data$academic_year, start = 5, stop = 6), sep = "-"))
+
+
+fsm_school_data %>%
+  filter(phase_type_grouping != "State-funded nursery", phase_type_grouping != "Total", la_name == "Birmingham") %>%
+  filter(fsm == "known to be eligible for free school meals (used for FSM in Performance Tables)") %>%
+ggplot() +
+  geom_line(aes(x = year, y = percent_of_pupils, group = phase_type_grouping, colour = phase_type_grouping)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_colour_manual(values = c("red", "blue", "green", "orange"))
+ggsave(filename = "Output/Graphs/birm_percentfsm_byschool_yearly.png")
+
+
+av_fsm_school_data <- fsm_school_data %>%
+  filter(phase_type_grouping != "State-funded nursery", phase_type_grouping != "Total", la_name == "Birmingham") %>%
+  filter(fsm == "known to be eligible for free school meals (used for FSM in Performance Tables)" |
+           fsm == "number of pupils (used for FSM in Performance Tables)") %>%
+  mutate(fsm = if_else(fsm == "number of pupils (used for FSM in Performance Tables)", "total_headcount", "fsm_headcount")) %>%
+  group_by(phase_type_grouping, year, fsm) %>%
+  summarise(headcount = mean(headcount)) %>%
+  pivot_wider(names_from = fsm, values_from = headcount) %>%
+  ungroup() %>%
+  group_by(phase_type_grouping) %>%
+  summarise(av_fsm_rate = mean(fsm_headcount)/mean(total_headcount), av_headcount = mean(fsm_headcount)) %>%
+  kable("latex", booktabs = TRUE)
 
 
 
