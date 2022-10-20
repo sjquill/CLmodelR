@@ -108,6 +108,13 @@ gender_susp_data <-susp_data %>%
             perm_excl = perm_excl, excl_rate = perm_excl/headcount,
             headcount = headcount)
 
+av_gender_susp_data <- gender_susp_data %>%
+  group_by(school_type, characteristic) %>%
+  summarise(av_susp = mean(one_plus_susp), av_susp_rate = sum(one_plus_susp)/sum(headcount),
+            av_excl = mean(perm_excl), av_excl_rate = sum(perm_excl)/sum(headcount),
+            av_headcount = mean(headcount)) %>%
+  kable("latex", booktabs = TRUE)
+
 
 gender_susp_data %>%
   ggplot() +
@@ -130,13 +137,6 @@ gender_susp_data %>%
   theme(strip.background = element_blank())
 ggsave(filename = "Output/Graphs/birm_excl_bygender.png")
 
-
-av_gender_susp_data <- gender_susp_data %>%
-  group_by(school_type, characteristic) %>%
-  summarise(av_susp = mean(one_plus_susp), av_susp_rate = sum(one_plus_susp)/sum(headcount),
-            av_excl = mean(perm_excl), av_excl_rate = sum(perm_excl)/sum(headcount),
-            av_headcount = mean(headcount)) %>%
-  kable("latex", booktabs = TRUE)
 
 # # # # # #AGE# # # # # # # # # # # # # # # # # #
 age_susp_data <- susp_data %>%
@@ -308,5 +308,97 @@ IDACI_susp_data %>%
   theme(strip.background = element_blank()) +
   scale_colour_viridis(option = "viridis", discrete = TRUE)
 ggsave(filename = "Output/Graphs/ENG_susp_byIDACI_yearly.png")
+
+############################################################################################################
+#######NEW DATA#######################################################################################################
+############################################################################################################
+readin_data <- read.csv("/Users/katehayes/temp_data/permanent-and-fixed-period-exclusions-in-england_2020-21/data/exc_pru.csv")
+
+
+pru_susp_data <- readin_data
+names(pru_susp_data)[2] <- "academic_year"
+pru_susp_data <- pru_susp_data %>%
+  mutate(year = as.numeric(paste(substr(pru_susp_data$academic_year, start = 1, stop = 2),
+                                 substr(pru_susp_data$academic_year, start = 5, stop = 6), sep = ""))) %>%
+  mutate(academic_year = paste(substr(pru_susp_data$academic_year, start = 1, stop = 4),
+                               substr(pru_susp_data$academic_year, start = 5, stop = 6), sep = "-")) %>%
+  filter(la_name == "Birmingham", geographic_level == "Local authority") %>%
+  group_by(year) %>%
+  summarise(one_plus_susp = one_plus_susp, susp_rate = one_plus_susp/headcount,
+            perm_excl = perm_excl, excl_rate = perm_excl/headcount,
+            headcount = headcount)
+
+av_pru_susp_data <- pru_susp_data %>%
+  summarise(av_susp = mean(one_plus_susp), av_susp_rate = sum(one_plus_susp)/sum(headcount),
+            av_excl = mean(perm_excl), av_excl_rate = sum(perm_excl)/sum(headcount),
+            av_headcount = mean(headcount)) %>%
+  kable("latex", booktabs = TRUE)
+
+
+pru_susp_data %>%
+  ggplot() +
+  geom_line(aes(x = year, y = headcount)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) +
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_headcount_pru.png")
+
+pru_susp_data %>%
+  ggplot() +
+  geom_line(aes(x = year, y = susp_rate)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_susp_pru.png")
+
+pru_susp_data %>%
+  ggplot() +
+  geom_line(aes(x = year, y = excl_rate)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_excl_pru.png")
+
+
+
+############################################################################################################
+#######NEW DATA#######################################################################################################
+############################################################################################################
+readin_data <- read.csv("/Users/katehayes/temp_data/school-pupils-and-their-characteristics_2021-22 (1)/data/spc_pupils_age_and_gender_.csv")
+
+school_data <- readin_data
+names(school_data)[1] <- "academic_year"
+school_data <- school_data %>%
+  mutate(year = as.numeric(paste(substr(school_data$academic_year, start = 1, stop = 2),
+                                 substr(school_data$academic_year, start = 5, stop = 6), sep = ""))) %>%
+  mutate(academic_year = paste(substr(school_data$academic_year, start = 1, stop = 4),
+                               substr(school_data$academic_year, start = 5, stop = 6), sep = "-")) %>%
+  filter(gender != "Total", age != "Total") %>%
+  mutate(age = as.numeric(age)) %>%
+  arrange(age)
+
+school_data %>%
+  filter(phase_type_grouping == "Pupil referral unit") %>%
+  ggplot() +
+  geom_line(aes(x = year, y = headcount, group = age, colour = age)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_colour_viridis(option = "viridis", discrete = TRUE)
+# ggsave(filename = "Output/Graphs/birm_excl_pru.png")
+
+
+
+school_data %>%
+  filter(la_name == "Birmingham") %>%
+  group_by(year) %>%
+  summarise(headcount = headcount)
+
+
+
 
 
