@@ -383,3 +383,31 @@ care_duration_data %>%
 ggsave(filename = "Output/Graphs/eng_headcount_care_duration_yearly.png")
 
 
+#########rNEW DATA - repeat episodes of care######################################################################################################
+readin_data <- read.csv("/Users/katehayes/temp_data/children-looked-after-in-england-including-adoptions_2021/data/national_cla_ceased_during_year_placements_care_periods.csv")
+care_repeat_data <- readin_data
+
+care_repeat_data %>%
+ filter(cla_group == "Number of periods of care", periods_or_placements != "Total",
+        periods_or_placements != "10 or more",
+        age_on_ceasing != "Total",  age_on_ceasing != "Under 1 year",  age_on_ceasing != "1 to 4 years",  age_on_ceasing != "5 to 9 years",) %>%
+ group_by(age_on_ceasing, periods_or_placements, time_period) %>%
+  mutate(number = as.numeric(number)) %>%
+  summarise(number = number) %>%
+  mutate(number = if_else(is.na(number), 0, number)) %>%
+  ggplot() +
+  geom_line(aes(x = periods_or_placements, y = number,
+                group = age_on_ceasing, colour = age_on_ceasing)) +
+  facet_wrap(~time_period) +
+  scale_x_discrete(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank(), axis.text.x=element_text(angle = -35, hjust = 0)) +
+  scale_colour_viridis(option = "viridis", discrete = TRUE)
+ggsave(filename = "Output/Graphs/eng_headcount_care_duration_yearly.png")
+
+# essentially, most people have one placement, not that many have more than 3
+
+
+
+

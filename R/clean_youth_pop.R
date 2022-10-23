@@ -12,6 +12,26 @@ pop_data$age <- as.numeric(gsub('[Age ]', '', pop_data$age))
 
 
 ##GRAPH OUTPUT
+# first one try combine poverty with population
+
+pov_pop_data <- pop_data %>%
+  filter(age %in% 10:17, year %in% 2015:2020) %>%
+  group_by(year) %>%
+  summarise(tot_yearly = sum(population)) %>%
+  left_join(poverty_data, by = "year") %>%
+  mutate(number_pov = tot_yearly*percent, number_not = tot_yearly*(1-percent)) %>%
+  pivot_longer(cols = starts_with("number_"), names_to = "poverty", values_to = "number") %>%
+  ggplot() +
+  geom_area(aes(x = year, y = number, fill = fct_rev(poverty))) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  scale_colour_manual(values = c("#00cc99", "#6600cc")) +
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/tot_pop_10-17.png")
+
+pov_pop_data
+
 
 pop_data %>%
   filter(age %in% 10:17) %>%

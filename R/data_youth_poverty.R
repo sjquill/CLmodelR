@@ -10,4 +10,23 @@
 # temp <- curl_download(url=source, destfile=temp, quiet=FALSE, mode="wb")
 # readin_data <- read_excel(temp, sheet = 4)
 
-readin_data <- read.csv("/Users/katehayes/temp_data/youth_pov.csv")
+readin_data <- read_excel("/Users/katehayes/temp_data/children-in-low-income-families-local-area-statistics-2014-to-2021 (1).xlsx", sheet = 4, skip = 9)
+poverty_data <- readin_data %>%
+  filter(str_detect(`Local Authority [note 2]`, "Birmingham"))
+poverty_data <- poverty_data[,10:16] %>%
+  pivot_longer(cols = 1:7, names_to = "year", values_to = "percent") %>%
+  mutate(year = as.numeric(str_extract(year, "[[:digit:]]+")))
+# NOTE!!!! i do not like or trust these numbers. need to have a serious look - but will do for now
+kable(poverty_data, "latex", booktabs = TRUE)
+
+
+poverty_data %>%
+  ggplot() +
+  geom_line(aes(x = year, y = percent)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) +
+  theme_classic() +
+  theme(strip.background = element_blank())
+
+
+

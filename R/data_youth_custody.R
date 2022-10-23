@@ -63,114 +63,6 @@ library(vctrs)
 ################################################################################################################################
 ############clocal level open data, outcomes table###############################
 ################################################################################################################################
-##children sentenced and cautioned in birmingham, yearly, financial year 2013/14 to 2020/21
-
-#read in the data
-caut_sent_data <- read_ods("/Users/katehayes/temp_data/Outcome_table.ods", sheet = 3)
-
-##ok for my model groupings i need to separate out custody and 'restrictions'
-##define restrictions as:
-    ##compensation, conditional discharge, referral order, youth conditional caution, youth rehabilitation order
-
-##drop the NA column at the end, keep only Birmingham, drop also any columns i dont want
-caut_sent_data <- caut_sent_data[,1:8] %>%
-  filter(YJS == "Birmingham") %>%
-    group_by(Financial_Year, Caution_or_sentence_type, Caution_or_sentence_tier) %>%
-      summarise(Number_Cautioned_Sentenced = sum(Number_Cautioned_Sentenced))
-
-total <- caut_sent_data  %>%
-group_by(Financial_Year) %>%
-summarise(Number_Cautioned_Sentenced = sum(Number_Cautioned_Sentenced))
-
-##separate out custody
-cust_data <- caut_sent_data %>%
-  filter(Caution_or_sentence_tier == "Custody")
-
-cust_data$Caution_or_sentence_type <- factor(cust_data$Caution_or_sentence_type, levels = c("Section 226b", "Section 90-91 Detention", "Detention and Training Order"))
-
-cust_plot <- cust_data %>%
-      ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced, fill = Caution_or_sentence_type)) +
-      geom_bar(stat = "identity", position = "fill") +
-      theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-cust_plot
-
-cust_data_av <- cust_data %>%
-  filter(Financial_Year != "2020-21") %>%
-  group_by(Caution_or_sentence_type) %>%
-  summarise(av_sentenced = mean(Number_Cautioned_Sentenced))
-
-##separate out new thing which is just any csj not custody
-
-csj_data <- caut_sent_data %>%
-  filter(Caution_or_sentence_tier != "Custody", Financial_Year != "2020-21")
-
-csj_plot <- csj_data %>%
-  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced)) +
-  geom_bar(stat = "identity") +
-  facet_wrap(~Caution_or_sentence_type) +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-csj_plot
-
-csj_avs <- csj_data %>%
-  ungroup() %>%
-  mutate(tot = sum(Number_Cautioned_Sentenced)) %>%
-  group_by(Caution_or_sentence_type) %>%
-  mutate(av_pc = sum(Number_Cautioned_Sentenced)/tot, av_num = sum(Number_Cautioned_Sentenced)/7) %>%
-  ungroup() %>%
-  group_by(Caution_or_sentence_type) %>%
-  summarise(av_pc = mean(av_pc), av_num = mean(av_num))
-
-
-##separate out restricted
-rest_data <- caut_sent_data %>%
-  filter(Caution_or_sentence_type %in% c("Referral Order", "Youth Conditional Caution", "Youth Rehabilitation Order", "Conditional Discharge", "Compensation Order", "Reparation Order"))
-
-
-sum_rest_data <- rest_data %>%
-  group_by(Financial_Year) %>%
-    summarise(Number_Cautioned_Sentenced = sum(Number_Cautioned_Sentenced))
-
-
-rest_plot <- rest_data %>%
-  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced)) +
-  geom_bar(stat = "identity") +
-  facet_wrap(~Caution_or_sentence_type) +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-rest_plot
-
-rest_plot2 <- rest_data %>%
-  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced, fill = Caution_or_sentence_type)) +
-  geom_bar(stat = "identity", position = "fill") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-rest_plot2
-##referral orders are getting more popular, rehavilitation orders less
-
-
-sum_rest_plot <- sum_rest_data %>%
-  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced)) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-sum_rest_plot
-
-##SO we have numbers of children sentenced and cautioned
-## or in model terms, sentenced to custody or restricted, in birmingham yearly
-##additionally it would be useful to know how long each type of caution/sentence lasts
-##ideally at the birmingham or west midlands level, but county-level if necessary
-
-##here are the median figures for 2019 and 2020, at total country level:
-#DTO - 91.50
-#Other -292.25
-#Remand - 41.00
-################################################################################################################################
-################################################################################################################################
-################################################################################################################################
-
-
 ##where is children on remand data? only national and yearly.
 ##so if this is the case then i might have to construct yearly average probabilities of remand into bail, custody, whatever
 ##and then apply these to the (hopefully) local numbers of children getting charged in birmingham
@@ -372,54 +264,27 @@ custody_data <- custody_data %>%
 
 
 ##making plots to visualise
-rvs_plot <- custody_data %>%
-  ggplot(aes(x = year, y = number_in_custody, fill = `Legal basis`)) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-rvs_plot
-
-rvs_plot2 <- custody_data %>%
-  ggplot(aes(x = year, y = number_in_custody, fill = `Legal basis`)) +
-  geom_bar(stat = "identity", position = "fill") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-rvs_plot2
-
-
-remand_plot <- custody_data %>%
-  filter(`Legal basis` == "Remand") %>%
-    ggplot(aes(x = year, y = number_in_custody)) +
-    geom_bar(stat = "identity") +
-    theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-remand_plot
-
-sent_cust_plot <- custody_data %>%
-  filter(`Legal basis` != "Remand") %>%
-  ggplot(aes(x = year, y = number_in_custody, fill = `Legal basis`)) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-sent_cust_plot
+custody_data %>%
+  mutate(`Legal basis` = factor(`Legal basis`,
+                levels = c("DTO", "Section 91", "Remand", "Other sentences(2)"))) %>%
+ggplot() +
+  geom_area(aes(x = as.numeric(year), y = number_in_custody, fill = fct_rev(`Legal basis`))) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/westmid_custody_bylegal.png")
 #basically remand comes down then goes back up, while total sentenced coming down, mostly due to drop in DTOs
 
-#just computing the total numbers
-remand_data <- custody_data %>%
-  filter(`Legal basis` == "Remand")  %>%
-    group_by(year) %>%
-      summarise(number_in_custody = sum(number_in_custody))
-
-sent_cust_data <- custody_data %>%
-  filter(`Legal basis` != "Remand")  %>%
-  group_by(year) %>%
-  summarise(number_in_custody = sum(number_in_custody))
-
+#data output
 custody_pc_av_data <- custody_data %>%
   filter(year != "2021")  %>%
   mutate(tot_custody = sum(number_in_custody)) %>%
   group_by(`Legal basis`) %>%
-    summarise(av_number = mean(number_in_custody), av_percent = sum(number_in_custody)/tot_custody)
+    summarise(av_number = mean(number_in_custody), av_percent = sum(number_in_custody)/tot_custody) %>%
+  distinct(`Legal basis`, av_percent, av_number) %>%
+kable("latex", booktabs = TRUE)
 ################# Average monthly youth custody population by ethnicty######################################
 ##in the youth justice statistics supplementaries chapter 7 , sheet 7.20, at west midlands level
 ##ATable 7.20: Average monthly youth custody population by region of home Youth Justice Service
@@ -452,50 +317,62 @@ custody_gen_data <- read_xlsx("/Users/katehayes/temp_data/Ch 7 - Children in you
 colnames(custody_gen_data)[2] <- "region_home_yjs"
 
 custody_gen_data <- custody_gen_data %>%
-  mutate(Gender = vec_fill_missing(Gender, direction = c("down")))
-
-custody_gen_data <- custody_gen_data[!is.na(custody_gen_data$region_home_yjs), ]
-
-custody_gen_data <- custody_gen_data %>%
+  mutate(Gender = vec_fill_missing(Gender, direction = c("down"))) %>%
+  filter(!is.na(region_home_yjs)) %>%
   pivot_longer(starts_with("20"),
                names_to="year",
-               values_to="number_in_custody") %>%
-  filter(region_home_yjs == "West Midlands", year != "2021") %>%
-  mutate(tot = sum(number_in_custody)) %>%
-  group_by(Gender) %>%
-  summarise(pc = sum(number_in_custody)/tot)
+               values_to="number_in_custody")
 
 
-custody_gen_plot <- ggplot(custody_gen_data[custody_gen_data$region_home_yjs == "West Midlands", ], aes(x = year, y = number_in_custody, fill = Gender)) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+  custody_gen_data %>%
+  filter(region_home_yjs == "West Midlands") %>%
+    ggplot() +
+    geom_area(aes(x = as.numeric(year), y = number_in_custody, fill = fct_rev(Gender))) +
+    scale_x_continuous(name = "") +
+    scale_y_continuous(name = "") +
+    theme_classic() +
+    theme(strip.background = element_blank())
+  ggsave(filename = "Output/Graphs/westmid_custody_bygender.png")
 
-custody_gen_plot
-
-
-
+  av_custody_gen_data <- custody_gen_data %>%
+    filter(region_home_yjs == "West Midlands", year != "2021") %>%
+    mutate(tot = sum(number_in_custody)) %>%
+    group_by(Gender) %>%
+    summarise(av_percent = sum(number_in_custody)/tot, av_number = mean(number_in_custody)) %>%
+    distinct(Gender, av_percent, av_number) %>%
+    kable("latex", booktabs = TRUE)
 
 ################# Average monthly youth custody population by age UNDER !8######################################
 custody_age_data <- read_xlsx("/Users/katehayes/temp_data/Ch 7 - Children in youth custody.xls", sheet = 19, skip = 3, n_max = 48)
 colnames(custody_age_data)[2] <- "region_home_yjs"
 
 custody_age_data <- custody_age_data %>%
-  mutate(Age = vec_fill_missing(Age, direction = c("down")))
-
-custody_age_data <- custody_age_data[!is.na(custody_age_data$region_home_yjs), ]
-
-custody_age_data <- custody_age_data %>%
+  mutate(Age = vec_fill_missing(Age, direction = c("down"))) %>%
+  filter(!is.na(region_home_yjs)) %>%
   pivot_longer(starts_with("20"),
                names_to="year",
                values_to="number_in_custody")
 
 
-custody_age_plot <- ggplot(custody_age_data[custody_age_data$region_home_yjs == "West Midlands", ], aes(x = year, y = number_in_custody, fill = Age)) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+custody_age_data %>%
+  filter(region_home_yjs == "West Midlands") %>%
+  ggplot() +
+  geom_area(aes(x = as.numeric(year), y = number_in_custody, fill = Age)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/westmid_custody_byage.png")
 
-custody_age_plot
 
+av_custody_age_data <- custody_age_data %>%
+  filter(region_home_yjs == "West Midlands", year != "2021") %>%
+  mutate(tot = sum(number_in_custody)) %>%
+  group_by(Age) %>%
+  summarise(av_percent = sum(number_in_custody)/tot, av_number = mean(number_in_custody)) %>%
+  distinct(Age, av_percent, av_number) %>%
+  kable("latex", booktabs = TRUE)
 
 ################# time in custody######################################
 ##Table 7.32: Legal basis episodes ending by Youth Justice Service region and nights, years ending March 2019 to 2021
@@ -514,39 +391,44 @@ colnames(custody_time_data)[5] <- "2021"
 
 custody_time_data <- custody_time_data %>%
   mutate(region_home_yjs = vec_fill_missing(region_home_yjs, direction = c("down"))) %>%
-  filter(region_home_yjs == "West Midlands")
-
-custody_time_data <- custody_time_data[!is.na(custody_time_data[2]), ]
-
-custody_time_data <- custody_time_data %>%
+  filter(region_home_yjs == "West Midlands", !is.na(custody_time_data[2])) %>%
   pivot_longer(starts_with("20"),
                names_to="year",
-               values_to="number_in_timespan")
+               values_to="number_in_timespan") %>%
+  filter(number_nights != "Total", number_nights != "Median number of nights")
 
 
-cust_time_plot <- custody_time_data %>%
-  filter(number_nights != "Total", number_nights != "Median number of nights") %>%
-  ggplot(aes(x = number_nights, y = number_in_timespan)) +
-  facet_wrap(~year) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+custody_time_data %>%
+ggplot() +
+  geom_area(aes(x = as.numeric(year), y = number_in_timespan, fill = fct_rev(number_nights))) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/westmid_custody_bydur.png")
 
-  cust_time_plot
+#
+# custody_time_data %>%
+#   ggplot() +
+#   geom_area(aes(x = number_nights, y = number_in_timespan, fill = fct_rev(year))) +
+#   scale_x_discrete(name = "") +
+#   scale_y_continuous(name = "") +
+#   theme_classic() +
+#   theme(strip.background = element_blank()) +
+#   scale_fill_viridis(discrete = TRUE, direction = -1)
+# ggsave(filename = "Output/Graphs/westmid_custody_bydur.png")
 
 
-cus_time_dist <- custody_time_data %>%
-  filter(number_nights != "Total", number_nights != "Median number of nights") %>%
+
+av_cus_time_dist <- custody_time_data %>%
+  filter(number_nights != "Total", number_nights != "Median number of nights", year !=2021) %>%
   mutate(tot = sum(number_in_timespan)) %>%
   group_by(number_nights) %>%
-  summarise(percent = sum(number_in_timespan)/tot)
+  summarise(av_percent = sum(number_in_timespan)/tot) %>%
+  distinct(number_nights, av_percent) %>%
+  kable("latex", booktabs = TRUE)
 
-
-
-  (45*173+((182-92)/2)*68+((273-183)/2)*34+330*55)/330
-  #its 92.5, so i obv guessed everything here but mayeb 90 as mean days makes sense
-  ##this is remand PLUS sentenced to custody
-
-#####this one requires more careful thinking about how to graph
 
 ##Table 7.27: Legal Basis ending by legal basis type and nights, years ending March 2019 to 2021
 custody_time_data2 <- read_xlsx("/Users/katehayes/temp_data/Ch 7 - Children in youth custody.xls", sheet = 28, skip = 3, n_max = 22)
@@ -558,37 +440,31 @@ colnames(custody_time_data2)[4] <- "2020"
 colnames(custody_time_data2)[5] <- "2021"
 
 custody_time_data2 <- custody_time_data2 %>%
-  mutate(legal_basis = vec_fill_missing(legal_basis, direction = c("down")))
+  filter(!is.na(custody_time_data2[2])) %>%
+  mutate(legal_basis = vec_fill_missing(legal_basis, direction = c("down")))%>%
+  pivot_longer(starts_with("20"),
+               names_to="year",
+               values_to="number_in_timespan") %>%
+  filter(number_nights != "Total")
 
-custody_time_data2 <- custody_time_data2[!is.na(custody_time_data2[2]), ]
 
 ###getting averages, leaving out 21 bc it was weird
-custody_time_data2 <- custody_time_data2 %>%
-  pivot_longer(starts_with("20"),
-               names_to="year",
-               values_to="number_in_timespan") %>%
-  filter(number_nights == "Median number of nights", year != "2021") %>%
+av_cust_time_data2 <- custody_time_data2 %>%
+  filter(year != "2021", number_nights != "Median number of nights") %>%
   group_by(legal_basis) %>%
-  summarise(mmean = mean(number_in_timespan))
-
-custody_time_data2 <- custody_time_data2 %>%
-  pivot_longer(starts_with("20"),
-               names_to="year",
-               values_to="number_in_timespan") %>%
-  filter(number_nights == "Median number of nights", year != "2021") %>%
-  group_by(legal_basis) %>%
-  summarise(mmean = mean(number_in_timespan))
-
-pc <- custody_time_data2 %>%
-  pivot_longer(starts_with("20"),
-               names_to="year",
-               values_to="number_in_timespan") %>%
-  filter(number_nights != "Median number of nights", number_nights != "Total", year != "2021") %>%
-  group_by(legal_basis) %>%
-  mutate(tot = sum( number_in_timespan)) %>%
-  ungroup() %>%
+  mutate(tot = sum(number_in_timespan)) %>%
   group_by(legal_basis, number_nights) %>%
-  summarise(pc = sum(number_in_timespan)/tot)
+  summarise(av_percent = sum(number_in_timespan)/tot) %>%
+  distinct(number_nights, legal_basis, av_percent)%>%
+  kable("latex", booktabs = TRUE)
+
+# obviously this is not a proper way to calculate a median
+median <- custody_time_data2 %>%
+  filter(year != "2021", number_nights == "Median number of nights") %>%
+  group_by(legal_basis) %>%
+  summarise(median = mean(number_in_timespan)) %>%
+  kable("latex", booktabs = TRUE)
+
 
 
 ################# little extra pieces of detail######################################
@@ -600,20 +476,24 @@ first_time_data <- first_time_data %>%
   filter(`Local Authority` == "Birmingham") %>%
   pivot_longer(starts_with("20"),
                names_to="year",
-               values_to="ft_entrants")
+               values_to="ft_entrants") %>%
+  mutate(ft_entrants = as.numeric(ft_entrants), year = as.numeric(year))
 
-first_time_data$ft_entrants <- as.numeric(first_time_data$ft_entrants)
 
 av <- first_time_data %>%
   filter(year != "2021") %>%
-  mutate(av = mean(ft_entrants))
+  summarise(av = mean(ft_entrants))
 
-first_time_plot <- first_time_data %>%
-  ggplot(aes(x = year, y = ft_entrants)) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+first_time_data %>%
+ggplot() +
+  geom_line(aes(x = year, y = ft_entrants)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_fte.png")
 
-first_time_plot
+
 #note: i checked this against total cautions/sentences in Birmingham and it is rising - was 40% in 2013 and is now 60%
 
 #Table 2.4: Number of child first time entrants(1)(2) by sex and type of disposal given on first offence, years ending March 2011 to 2021
@@ -630,66 +510,102 @@ first_cs_data_g <- first_cs_data[28:38,] %>%
 first_cs_data_b <- first_cs_data[15:25,] %>%
   mutate(sex = "male")
 
-first_cs_data <- rbind(first_cs_data_g, first_cs_data_b)
-first_cs_data$youth_caution <- as.numeric(first_cs_data$youth_caution)
-
-first_cs_data <- first_cs_data %>%
+first_cs_data <- rbind(first_cs_data_g, first_cs_data_b) %>%
+  mutate(youth_caution = as.numeric(youth_caution)) %>%
   pivot_longer(youth_caution:`Other(4)`,
                names_to="sentence_caution_type",
                values_to="ft_entrants")
 
-pc_gender <- first_cs_data %>%
+
+av_first_cs_data <- first_cs_data %>%
   filter(year != "2021") %>%
-  group_by(sex) %>%
-  summarise(tot_gender = sum(ft_entrants)/10)
-
-
-
-first_cs_plot <- first_cs_data %>%
-  filter(sentence_caution_type == "Community sentence") %>%
-  ggplot(aes(x = year, y = ft_entrants, fill = sex)) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-
-first_cs_plot <- first_cs_data %>%
-  filter(sentence_caution_type == "youth_caution") %>%
-  ggplot(aes(x = year, y = ft_entrants, fill = sex)) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-first_cs_plot <- first_cs_data %>%
-  filter(sentence_caution_type == "Immediate custody") %>%
-  ggplot(aes(x = year, y = ft_entrants, fill = sex)) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-  first_cs_plot
-
-first_cs_pc <- first_cs_data %>%
-  group_by(sex) %>%
   mutate(tot = sum(ft_entrants)) %>%
   group_by(sex, sentence_caution_type) %>%
-  mutate(pc = sum(ft_entrants)/tot)
+  summarise(av_percent = sum(ft_entrants)/tot) %>%
+  distinct(av_percent, sex, sentence_caution_type) # %>%
+  kable("latex", booktabs = TRUE)
 
-#this doesnt quite work lol....
+# pc_gender <- first_cs_data %>%
+#   filter(year != "2021") %>%
+#   group_by(sex) %>%
+#   summarise(tot_gender = sum(ft_entrants)/10)
 
-#data %>%
-#group_by(month) %>%
-#mutate(per =  100 *count/sum(count)) %>%
-#ungroup
+first_cs_data %>%
+  group_by(year, sex) %>%
+  summarise(ft_entrants = sum(ft_entrants)) %>%
+  ggplot() +
+  geom_area(aes(x = as.numeric(year), y = ft_entrants, fill = sex)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/eng_fte.png")
 
-pc_plot <- first_cs_pc %>%
-  filter(year == "2021") %>%
-  ggplot(aes(x = sentence_caution_type, y = pc)) +
-  facet_wrap(~sex) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
 
-pc_plot
+# percentage they were of ftes that year
+first_cs_data %>%
+  group_by(year) %>%
+  mutate(tot_yearly = sum(ft_entrants)) %>%
+  group_by(year, sex, sentence_caution_type) %>%
+  mutate(percent = ft_entrants/tot_yearly) %>%
+  filter(sentence_caution_type != "Other(4)") %>%
+  filter(sentence_caution_type == "Immediate custody") %>%
+  ggplot() +
+    geom_area(aes(x = as.numeric(year), y = percent, fill = sex)) +
+    scale_x_continuous(name = "") +
+    scale_y_continuous(name = "") +
+    theme_classic() +
+    theme(strip.background = element_blank())
+  ggsave(filename = "Output/Graphs/eng_fte_custody.png")
 
-#female first time entrants - 80% are youth caution, 15% are community sentence, 0.3% are immediate custody, 2% are conditional discharge
-#male first time entrants - 70% are youth caution, 25% community sentence, 1.5% immediate custody, 2% conditional discharge
+
+
+  first_cs_data %>%
+    group_by(year) %>%
+    mutate(tot_yearly = sum(ft_entrants)) %>%
+    group_by(year, sex, sentence_caution_type) %>%
+    mutate(percent = ft_entrants/tot_yearly) %>%
+    filter(sentence_caution_type != "Other(4)") %>%
+    filter(sentence_caution_type == "Community sentence") %>%
+    ggplot() +
+    geom_area(aes(x = as.numeric(year), y = percent, fill = sex)) +
+    scale_x_continuous(name = "") +
+    scale_y_continuous(name = "") +
+    theme_classic() +
+    theme(strip.background = element_blank())
+  ggsave(filename = "Output/Graphs/eng_fte_commsent.png")
+
+  first_cs_data %>%
+    group_by(year) %>%
+    mutate(tot_yearly = sum(ft_entrants)) %>%
+    group_by(year, sex, sentence_caution_type) %>%
+    mutate(percent = ft_entrants/tot_yearly) %>%
+    filter(sentence_caution_type != "Other(4)") %>%
+    filter(sentence_caution_type == "youth_caution") %>%
+    ggplot() +
+    geom_area(aes(x = as.numeric(year), y = percent, fill = sex)) +
+    scale_x_continuous(name = "") +
+    scale_y_continuous(name = "") +
+    theme_classic() +
+    theme(strip.background = element_blank())
+  ggsave(filename = "Output/Graphs/eng_fte_caut.png")
+
+  first_cs_data %>%
+    group_by(year) %>%
+    mutate(tot_yearly = sum(ft_entrants)) %>%
+    group_by(year, sex, sentence_caution_type) %>%
+    mutate(percent = ft_entrants/tot_yearly) %>%
+    filter(sentence_caution_type != "Other(4)") %>%
+    filter(sentence_caution_type == "youth_caution") %>%
+    ggplot() +
+    geom_area(aes(x = as.numeric(year), y = percent, fill = sex)) +
+    scale_x_continuous(name = "") +
+    scale_y_continuous(name = "") +
+    theme_classic() +
+    theme(strip.background = element_blank())
+  ggsave(filename = "Output/Graphs/eng_fte_caut.png")
+
+
 
 #Table 2.2: Number of chid first time entrants(1)(2), by type of first offence and sex, years ending March 2011 to 2021
 
@@ -704,62 +620,45 @@ first_offence_data_g <- first_offence_data[29:39,] %>%
 first_offence_data_b <- first_offence_data[16:26,] %>%
   mutate(sex = "male")
 
-first_offence_data <- rbind(first_offence_data_g, first_offence_data_b)
-
-first_offence_data$`Violence against the person` <- as.numeric(first_offence_data$`Violence against the person`)
-
-
-first_offence_data <- first_offence_data %>%
+first_offence_data <- rbind(first_offence_data_g, first_offence_data_b) %>%
+  mutate(`Violence against the person` = as.numeric(`Violence against the person`)) %>%
   pivot_longer(`Violence against the person`:`Summary motoring offences`,
                names_to="offence_type",
                values_to="ft_entrants")
 
 
-#ok so this is the average across the years
-first_offence_pc <- first_offence_data %>%
-  group_by(sex) %>%
-  mutate(count = sum(ft_entrants)) %>%
-  group_by(offence_type, .add = TRUE) %>%
-  mutate(pc = sum(ft_entrants)/count)
 
-pc2_plot <- first_offence_pc %>%
-  filter(year == "2021") %>%
-  ggplot(aes(x = offence_type, y = pc)) +
-  facet_wrap(~sex) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+av_first_offence_data <- first_offence_data %>%
+  filter(year != "2021") %>%
+  mutate(tot = sum(ft_entrants)) %>%
+  group_by(sex, offence_type) %>%
+  summarise(av_percent = sum(ft_entrants)/tot) %>%
+  distinct(av_percent, sex, offence_type) %>%
+kable("latex", booktabs = TRUE)
 
-pc2_plot
 
-#obut now year by year?
-
-pc3_plot <- first_offence_pc %>%
-  group_by(sex, year) %>%
-  mutate(count = sum(ft_entrants)) %>%
-  group_by(offence_type, .add = TRUE) %>%
-  mutate(pc = sum(ft_entrants)/count) %>%
-  ggplot(aes(x = year, y = pc, fill = sex)) +
+first_offence_data %>%
+  filter(offence_type %in% c("Drug offences", "Possession of weapons",
+                             "Violence against the person", "Sexual offences")) %>%
+  group_by(year) %>%
+  mutate(tot_yearly = sum(ft_entrants)) %>%
+  group_by(year, sex, offence_type) %>%
+  mutate(percent = ft_entrants/tot_yearly) %>%
+  ggplot() +
+  geom_area(aes(x = as.numeric(year), y = percent, fill = sex)) +
   facet_wrap(~offence_type) +
-  geom_bar(stat = "identity", position = "dodge") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/eng_fte_offence.png")
 
-pc3_plot
 
-#for first time entrants, percentage by offence
-#possession of weapons growing for both girls & boys
-#average across last few years is 3% girl 8% boy
-
-#drug offenses pretty steady, maybe growth in boys
-# av girl 5% boy 13%
-
-#violence against the persson increasing in both but more sharply in girls
-#av girl 4% boy 5%
-
-#boys commit relatively more drug and weapon offenses (even as they commit many more in absolute terms)
 
 ################################################################################################
 ########Chapter 9: Proven reoffending by children in England and Wales########################
 #Can do time to reoffending, reoddending by disposal, by offence, by the young offenders institue you were in (think about which one birmingham kids are sent to)
 ######Table 9.7: Proven reoffending data for children in England and Wales by index disposal(1),  years ending March 2010 to 2020 and quarters for the year ending March 2020
 
+first_offence_data <- read_xlsx("/Users/katehayes/temp_data/Ch 9 - Proven reoffending by children.xls", sheet = 3, skip = 3, n_max = 53)
 

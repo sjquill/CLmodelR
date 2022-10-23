@@ -7,201 +7,99 @@
 #read in the data
 readin_data <- read_ods("/Users/katehayes/temp_data/Outcome_table.ods", sheet = 3)
 
-##ok for my model groupings i need to separate out custodial and non-custodial
-#caut_sent_data$Caution_or_sentence_type <- factor(caut_sent_data$Caution_or_sentence_type, levels = c("Section 226b", "Section 90-91 Detention", "Detention and Training Order"))
-
-#drop the NA column at the end, drop also any columns i don't want   if keep only Birmingham, filter(YJS == "Birmingham") %>%
-
-
-# ggplot(aes(x = financial_year, y = split_caut_sent, fill = split)) +
-# geom_bar(stat = "identity", position = "dodge") +
-# theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-
+#drop the NA column at the end, drop also any columns i don't want
 
 caut_sent_data <- readin_data[,1:8]
 names(caut_sent_data) <- tolower(names(caut_sent_data))
 
-
-
-# save this once you figure out how to put the labels on
-caut_sent_data %>%
-  filter(pcc == "West Midlands") %>%
-  mutate(year = case_when(financial_year == "2013-14" ~ 2013, financial_year == "2014-15" ~ 2014,
-                          financial_year == "2015-16" ~ 2015, financial_year == "2016-17" ~ 2016,
-                          financial_year == "2017-18" ~ 2017, financial_year == "2018-19" ~ 2018,
-                          financial_year == "2019-20" ~ 2019, financial_year == "2020-21" ~ 2020)) %>%
-  group_by(year) %>%
-  mutate(wm_caut_sent = sum(number_cautioned_sentenced)) %>%
-  filter(yjs == "Birmingham") %>%
-  mutate(birm_caut_sent = sum(number_cautioned_sentenced)) %>%
-  ggplot() +
-  geom_line(aes(x = year, y = wm_caut_sent, colour = "West Midlands")) +
-  geom_line(aes(x = year, y = birm_caut_sent, colour = "Birmingham")) +
-  scale_x_continuous(name = "") +
-  scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) +
-  theme_classic() +
-  theme(strip.background = element_blank())
-# ggsave(filename = "Output/Graphs/tot_pop_10-17.png")
+########## GRAPHS###########################################################################
 
 
 caut_sent_data %>%
   filter(pcc == "West Midlands") %>%
-  mutate(year = case_when(financial_year == "2013-14" ~ 2013, financial_year == "2014-15" ~ 2014,
-                          financial_year == "2015-16" ~ 2015, financial_year == "2016-17" ~ 2016,
-                          financial_year == "2017-18" ~ 2017, financial_year == "2018-19" ~ 2018,
-                          financial_year == "2019-20" ~ 2019, financial_year == "2020-21" ~ 2020)) %>%
-  mutate(custody = case_when(caution_or_sentence_tier == "Custody" ~ "custodial", caution_or_sentence_tier != "Custody" ~ "non-custodial")) %>%
-  group_by(year, custody) %>%
-  mutate(wm_caut_sent = sum(number_cautioned_sentenced)) %>%
-  ggplot() +
-  geom_line(aes(x = year, y = wm_caut_sent, colour = custody)) +
+  mutate(year = as.numeric(substr(financial_year, 1, 4))) %>%
+  mutate(birm = if_else(yjs == "Birmingham", "Birmingham", "Rest of west mids")) %>%
+  group_by(year, birm) %>%
+  summarise(number_cautioned_sentenced = sum(number_cautioned_sentenced)) %>%
+  ggplot( aes(x = year, y = number_cautioned_sentenced, fill = birm)) +
+  geom_area() +
   scale_x_continuous(name = "") +
-  scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) +
+  scale_y_continuous(name = "") +
   theme_classic() +
   theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_v_westmids_caut_sent.png")
 
 
 caut_sent_data %>%
   filter(yjs == "Birmingham") %>%
-  mutate(year = case_when(financial_year == "2013-14" ~ 2013, financial_year == "2014-15" ~ 2014,
-                          financial_year == "2015-16" ~ 2015, financial_year == "2016-17" ~ 2016,
-                          financial_year == "2017-18" ~ 2017, financial_year == "2018-19" ~ 2018,
-                          financial_year == "2019-20" ~ 2019, financial_year == "2020-21" ~ 2020)) %>%
-  mutate(custody = case_when(caution_or_sentence_tier == "Custody" ~ "custodial", caution_or_sentence_tier != "Custody" ~ "non-custodial")) %>%
+  mutate(year = as.numeric(substr(financial_year, 1, 4))) %>%
+  mutate(custody = if_else(caution_or_sentence_tier == "Custody", "Custodial", "Non-custodial")) %>%
   group_by(year, custody) %>%
-  mutate(birm_caut_sent = sum(number_cautioned_sentenced)) %>%
+  summarise(number_cautioned_sentenced = sum(number_cautioned_sentenced)) %>%
   ggplot() +
-  geom_line(aes(x = year, y = birm_caut_sent, colour = custody)) +
+  geom_area(aes(x = year, y = number_cautioned_sentenced, fill = custody)) +
   scale_x_continuous(name = "") +
-  scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) +
+  scale_y_continuous(name = "") +
   theme_classic() +
   theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_custodial_v_not.png")
+
+
+caut_sent_data %>%
+  filter(yjs == "Birmingham") %>%
+  mutate(year = as.numeric(substr(financial_year, 1, 4))) %>%
+  filter(caution_or_sentence_tier == "Custody") %>%
+  mutate(caution_or_sentence_type = factor(caution_or_sentence_type,
+         levels = c("Section 226b", "Section 90-91 Detention", "Detention and Training Order"))) %>%
+  ggplot() +
+  geom_area(aes(x = year, y = number_cautioned_sentenced, fill = caution_or_sentence_type)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/birm_cust_bytype.png")
+
+caut_sent_data %>%
+  filter(yjs == "Birmingham") %>%
+  mutate(year = as.numeric(substr(financial_year, 1, 4))) %>%
+  filter(caution_or_sentence_tier != "Custody") %>%
+  mutate(caution_or_sentence_type2 =
+           if_else(caution_or_sentence_type == "Absolute Discharge" |
+                   caution_or_sentence_type == "Bind Over" |
+                   caution_or_sentence_type == "Reparation Order" |
+                   caution_or_sentence_type == "Sentence Deferred",
+                   "Other", caution_or_sentence_type)) %>%  # suddently i decided other doesnt work but im keeping the code in bc maybe ill bring it back
+  filter(caution_or_sentence_type2 != "Other") %>%
+  group_by(caution_or_sentence_type2) %>%
+  mutate(av_number = mean(number_cautioned_sentenced)) %>%
+  mutate(caution_or_sentence_type2 = fct_rev(factor(caution_or_sentence_type2,
+        levels = c("Referral Order", "Youth Rehabilitation Order", "Compensation Order",
+                   "Youth Conditional Caution", "Youth Caution", "Fine",
+                   "Conditional Discharge")))) %>% # reset your factor-column based on that order
+  ggplot() +
+  geom_area(aes(x = year, y = number_cautioned_sentenced, fill = caution_or_sentence_type2)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/birm_non-cust_bytype.png")
 
 
 
-plot1 <- caut_sent_data %>%
-  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced)) +
-    geom_bar(stat = "identity") +
-    theme(axis.text.x=element_text(angle = -90, hjust = 0))
 
-plot1
+########## DATA SUMMARY###########################################################################
+# taking out 2020 from the averages bc of the covid
 
-plot2 <- caut_sent_data %>%
-  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced)) +
-  geom_bar(stat = "identity") +
-  facet_wrap(~PCC) +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-plot2
-
-
-# +
-#     facet_wrap(~Caution_or_sentence_type) +
-#     theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-
-#
-# %>%
-#   group_by(YJS, Financial_Year, Caution_or_sentence_type, Caution_or_sentence_tier) %>%
-#   summarise(Number_Cautioned_Sentenced = Number_Cautioned_Sentenced)
-
-# total <- caut_sent_data  %>%
-#   group_by(Financial_Year) %>%
-#   summarise(Number_Cautioned_Sentenced = sum(Number_Cautioned_Sentenced))
-
-
-
-
-
-
-
-
-
-
-
-
-##separate out custody
-cust_data <- caut_sent_data %>%
-  filter(Caution_or_sentence_tier == "Custody")
-
-cust_data$Caution_or_sentence_type <- factor(cust_data$Caution_or_sentence_type, levels = c("Section 226b", "Section 90-91 Detention", "Detention and Training Order"))
-
-cust_plot <- cust_data %>%
-  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced, fill = Caution_or_sentence_type)) +
-  geom_bar(stat = "identity", position = "fill") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-cust_plot
-
-cust_data_av <- cust_data %>%
-  filter(Financial_Year != "2020-21") %>%
-  group_by(Caution_or_sentence_type) %>%
-  summarise(av_sentenced = mean(Number_Cautioned_Sentenced))
-
+av_caut_sent_data <- caut_sent_data %>%
+  filter(financial_year != "2020-21", yjs == "Birmingham") %>%
+  group_by(caution_or_sentence_type) %>%
+  summarise(av_sentenced = mean(number_cautioned_sentenced)) %>%
+kable("latex", booktabs = TRUE)
 ##separate out new thing which is just any csj not custody
 
-csj_data <- caut_sent_data %>%
-  filter(Caution_or_sentence_tier != "Custody", Financial_Year != "2020-21")
-
-csj_plot <- csj_data %>%
-  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced)) +
-  geom_bar(stat = "identity") +
-  facet_wrap(~Caution_or_sentence_type) +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-csj_plot
-
-csj_avs <- csj_data %>%
-  ungroup() %>%
-  mutate(tot = sum(Number_Cautioned_Sentenced)) %>%
-  group_by(Caution_or_sentence_type) %>%
-  mutate(av_pc = sum(Number_Cautioned_Sentenced)/tot, av_num = sum(Number_Cautioned_Sentenced)/7) %>%
-  ungroup() %>%
-  group_by(Caution_or_sentence_type) %>%
-  summarise(av_pc = mean(av_pc), av_num = mean(av_num))
 
 
-##separate out restricted
-rest_data <- caut_sent_data %>%
-  filter(Caution_or_sentence_type %in% c("Referral Order", "Youth Conditional Caution", "Youth Rehabilitation Order", "Conditional Discharge", "Compensation Order", "Reparation Order"))
 
 
-sum_rest_data <- rest_data %>%
-  group_by(Financial_Year) %>%
-  summarise(Number_Cautioned_Sentenced = sum(Number_Cautioned_Sentenced))
-
-
-rest_plot <- rest_data %>%
-  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced)) +
-  geom_bar(stat = "identity") +
-  facet_wrap(~Caution_or_sentence_type) +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-rest_plot
-
-rest_plot2 <- rest_data %>%
-  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced, fill = Caution_or_sentence_type)) +
-  geom_bar(stat = "identity", position = "fill") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-rest_plot2
-##referral orders are getting more popular, rehavilitation orders less
-
-
-sum_rest_plot <- sum_rest_data %>%
-  ggplot(aes(x = Financial_Year, y = Number_Cautioned_Sentenced)) +
-  geom_bar(stat = "identity") +
-  theme(axis.text.x=element_text(angle = -90, hjust = 0))
-
-sum_rest_plot
-
-##SO we have numbers of children sentenced and cautioned
-## or in model terms, sentenced to custody or restricted, in birmingham yearly
-##additionally it would be useful to know how long each type of caution/sentence lasts
-##ideally at the birmingham or west midlands level, but county-level if necessary
-
-##here are the median figures for 2019 and 2020, at total country level:
-#DTO - 91.50
-#Other -292.25
-#Remand - 41.00
