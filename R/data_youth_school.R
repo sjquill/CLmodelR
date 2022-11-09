@@ -170,37 +170,71 @@ av_age_susp_data <- age_susp_data %>%
 
 
 age_susp_data %>%
-  group_by(school_type, characteristic) %>%
-  summarise(av_susp = mean(one_plus_susp), av_susp_rate = sum(one_plus_susp)/sum(headcount),
-            av_excl = mean(perm_excl), av_excl_rate = sum(perm_excl)/sum(headcount),
-            av_headcount = mean(headcount)) %>%
-  filter(school_type != "State-funded primary") %>%
+  filter((school_type == "State-funded primary" & characteristic <= 10) | school_type != "State-funded primary") %>%
   ggplot() +
-  geom_line(aes(x = characteristic, y = av_susp_rate, colour = school_type)) +
+  geom_line(aes(x = characteristic, y = susp_rate, group = year, colour = year)) +
+  facet_wrap(~school_type) +
   scale_x_continuous(name = "") +
   scale_y_continuous(name = "") +
   theme_classic() +
-  theme(strip.background = element_blank())
+  theme(strip.background = element_blank()) +
+  scale_colour_viridis(option = "viridis", discrete = FALSE)
 ggsave(filename = "Output/Graphs/birm_susp_byage.png")
 
+
 age_susp_data %>%
-  group_by(school_type, characteristic) %>%
-  summarise(av_susp = mean(one_plus_susp), av_susp_rate = sum(one_plus_susp)/sum(headcount),
-            av_excl = mean(perm_excl), av_excl_rate = sum(perm_excl)/sum(headcount),
-            av_headcount = mean(headcount)) %>%
+  filter((school_type == "State-funded primary" & characteristic <= 10) | school_type != "State-funded primary") %>%
   ggplot() +
-  geom_line(aes(x = characteristic, y = av_excl_rate, colour = school_type)) +
+  geom_line(aes(x = characteristic, y = excl_rate, group = year, colour = year)) +
+  facet_wrap(~school_type) +
   scale_x_continuous(name = "") +
   scale_y_continuous(name = "") +
   theme_classic() +
-  theme(strip.background = element_blank())
+  theme(strip.background = element_blank()) +
+  scale_colour_viridis(option = "viridis", discrete = FALSE)
 ggsave(filename = "Output/Graphs/birm_excl_byage.png")
+
+
+# age_susp_data %>%
+#   group_by(school_type, characteristic) %>%
+#   summarise(av_susp = mean(one_plus_susp), av_susp_rate = sum(one_plus_susp)/sum(headcount),
+#             av_excl = mean(perm_excl), av_excl_rate = sum(perm_excl)/sum(headcount),
+#             av_headcount = mean(headcount)) %>%
+#   filter(school_type != "State-funded primary") %>%
+#   ggplot() +
+#   geom_line(aes(x = characteristic, y = av_susp_rate, colour = school_type)) +
+#   scale_x_continuous(name = "") +
+#   scale_y_continuous(name = "") +
+#   theme_classic() +
+#   theme(strip.background = element_blank())
+# ggsave(filename = "Output/Graphs/birm_susp_byage.png")
+
+
+
+# age_susp_data %>%
+#   group_by(school_type, characteristic) %>%
+#   summarise(av_susp = mean(one_plus_susp), av_susp_rate = sum(one_plus_susp)/sum(headcount),
+#             av_excl = mean(perm_excl), av_excl_rate = sum(perm_excl)/sum(headcount),
+#             av_headcount = mean(headcount)) %>%
+#   ggplot() +
+#   geom_line(aes(x = characteristic, y = av_excl_rate, colour = school_type)) +
+#   scale_x_continuous(name = "") +
+#   scale_y_continuous(name = "") +
+#   theme_classic() +
+#   theme(strip.background = element_blank())
+# ggsave(filename = "Output/Graphs/birm_excl_byage.png")
+
+
+
+
+
 
 
 age_susp_data %>%
   filter(characteristic %in% 10:18) %>%
   mutate(characteristic = as.factor(characteristic)) %>%
   mutate(characteristic = fct_rev(characteristic)) %>%
+  filter((school_type == "State-funded primary" & characteristic == 10) | school_type != "State-funded primary") %>%
   ggplot() +
   geom_line(aes(x = year, y = susp_rate, group = characteristic, colour = characteristic)) +
   facet_wrap(~school_type) +
@@ -213,7 +247,8 @@ ggsave(filename = "Output/Graphs/birm_susp_byage_yearly.png")
 
 
 age_susp_data %>%
-  filter(characteristic %in% 10:18) %>%
+  filter(characteristic %in% 10:18, school_type != "State-funded special") %>%
+  filter((school_type == "State-funded primary" & characteristic == 10) | (school_type != "State-funded primary" & characteristic != 10)) %>%
   mutate(characteristic = as.factor(characteristic)) %>%
   mutate(characteristic = fct_rev(characteristic)) %>%
   ggplot() +
@@ -300,6 +335,7 @@ av_IDACI_susp_data <- IDACI_susp_data %>%
 
 
 IDACI_susp_data %>%
+  filter(school_type != "Special") %>%
   ggplot() +
   geom_line(aes(x = year, y = excl_rate, group = characteristic, colour = characteristic)) +
   facet_wrap(~school_type) +
@@ -311,6 +347,7 @@ IDACI_susp_data %>%
 ggsave(filename = "Output/Graphs/ENG_excl_byIDACI_yearly.png")
 
 IDACI_susp_data %>%
+  filter(school_type != "Special") %>%
   ggplot() +
   geom_line(aes(x = year, y = susp_rate, group = characteristic, colour = characteristic)) +
   facet_wrap(~school_type) +
@@ -393,29 +430,29 @@ school_data <- school_data %>%
   arrange(age)
 
 school_data %>%
-  filter(la_name == "Birmingham", phase_type_grouping == "Pupil referral unit", age %in% 10:16) %>%
+  filter(la_name == "Birmingham", phase_type_grouping == "Pupil referral unit", age %in% 10:15) %>%
   mutate(age = as.factor(age)) %>%
   ggplot() +
-  geom_line(aes(x = year, y = headcount, group = age, colour = age)) +
+  geom_area(aes(x = year, y = headcount, group = age, fill = fct_rev(age))) +
   facet_wrap(~gender) +
   scale_x_continuous(name = "") +
   scale_y_continuous(name = "") +
-  theme_classic() +
-  theme(strip.background = element_blank()) +
-  scale_colour_viridis(option = "viridis", discrete = TRUE)
-ggsave(filename = "Output/Graphs/birm_headcount_pru_byagegender_yearly.png")
-
-school_data %>%
-  filter(la_name == "Birmingham", phase_type_grouping == "Pupil referral unit", age %in% 10:16) %>%
-  group_by(age, gender) %>%
-  summarise(headcount = mean(headcount)) %>%
-  ggplot() +
-  geom_line(aes(x = age, y = headcount, group = gender, colour = gender)) +
-  scale_x_continuous(name = "") +
-  scale_y_continuous(name = "") +
+  scale_fill_viridis(option = "viridis", discrete = TRUE) +
   theme_classic() +
   theme(strip.background = element_blank())
-ggsave(filename = "Output/Graphs/birm_headcount_pru_byagegender.png")
+ggsave(filename = "Output/Graphs/birm_headcount_pru_byagegender_yearly.png")
+
+# school_data %>%
+#   filter(la_name == "Birmingham", phase_type_grouping == "Pupil referral unit", age %in% 10:16) %>%
+#   group_by(age, gender) %>%
+#   summarise(headcount = mean(headcount)) %>%
+#   ggplot() +
+#   geom_line(aes(x = age, y = headcount, group = gender, colour = gender)) +
+#   scale_x_continuous(name = "") +
+#   scale_y_continuous(name = "") +
+#   theme_classic() +
+#   theme(strip.background = element_blank())
+# ggsave(filename = "Output/Graphs/birm_headcount_pru_byagegender.png")
 
 av_school_data <- school_data %>%
   filter(la_name == "Birmingham", phase_type_grouping == "Pupil referral unit", age %in% 10:16) %>%
@@ -435,20 +472,29 @@ fsm_school_data <- fsm_school_data %>%
   mutate(year = as.numeric(paste(substr(fsm_school_data$academic_year, start = 1, stop = 2),
                                  substr(fsm_school_data$academic_year, start = 5, stop = 6), sep = ""))) %>%
   mutate(academic_year = paste(substr(fsm_school_data$academic_year, start = 1, stop = 4),
-                               substr(fsm_school_data$academic_year, start = 5, stop = 6), sep = "-"))
+                               substr(fsm_school_data$academic_year, start = 5, stop = 6), sep = "-")) %>%
+
 
 
 fsm_school_data %>%
-  filter(phase_type_grouping != "State-funded nursery", phase_type_grouping != "Total", la_name == "Birmingham") %>%
+  filter(phase_type_grouping != "State-funded special school", phase_type_grouping != "State-funded nursery", phase_type_grouping != "Total", la_name == "Birmingham") %>%
   filter(fsm == "known to be eligible for free school meals (used for FSM in Performance Tables)") %>%
 ggplot() +
   geom_line(aes(x = year, y = percent_of_pupils, group = phase_type_grouping, colour = phase_type_grouping)) +
   scale_x_continuous(name = "") +
-  scale_y_continuous(name = "") +
+  scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) +
   theme_classic() +
   theme(strip.background = element_blank()) +
-  scale_colour_manual(values = c("red", "blue", "green", "orange"))
+  scale_colour_manual(values = c("red", "blue", "green"))
 ggsave(filename = "Output/Graphs/birm_percentfsm_byschool_yearly.png")
+
+
+# check <- fsm_school_data %>%
+#   filter(phase_type_grouping != "State-funded special school", phase_type_grouping != "State-funded nursery", phase_type_grouping != "Total", la_name == "Birmingham") %>%
+#   filter(fsm == "known to be eligible for free school meals" | fsm == "Total") %>%
+#   pivot_wider(names_from = fsm, values_from = headcount) %>%
+#   mutate(not_eligible = Total - `known to be eligible for free school meals`)
+
 
 
 av_fsm_school_data <- fsm_school_data %>%

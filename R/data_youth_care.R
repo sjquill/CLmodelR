@@ -26,12 +26,14 @@ care_data %>%
                             "Under 1 year", "1 to 4 years", "5 to 9 years",
                             "10 to 15 years", "16 years and over")) %>%
   ggplot() +
-  geom_line(aes(x = time_period, y = number,
-                group = characteristic, colour = characteristic)) +
+  geom_area(aes(x = time_period, y = number,
+                group = characteristic, fill = characteristic)) +
   scale_x_continuous(name = "") +
   scale_y_continuous(name = "") +
   theme_classic() +
-  theme(strip.background = element_blank())
+  theme(strip.background = element_blank()) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/birm_care_byage.png")
 
 #########GENDER######################################################################################################
 
@@ -39,12 +41,13 @@ care_data %>%
   filter(la_name == "Birmingham", cla_group == "Gender", characteristic != "Total") %>%
   mutate(number = as.numeric(number)) %>%
   ggplot() +
-  geom_line(aes(x = time_period, y = number,
-                group = characteristic, colour = characteristic)) +
+  geom_area(aes(x = time_period, y = number,
+                group = characteristic, fill = characteristic)) +
   scale_x_continuous(name = "") +
   scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) +
   theme_classic() +
   theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_care_bygender.png")
 
 #########LA OF PLACEMENT######################################################################################################
 
@@ -208,8 +211,8 @@ care_in_data %>%
                                       "Under 1 year", "1 to 4 years", "5 to 9 years",
                                       "10 to 15 years", "16 years and over")) %>%
   ggplot() +
-  geom_line(aes(x = time_period, y = number,
-                group = characteristic, colour = characteristic)) +
+  geom_area(aes(x = time_period, y = number,
+                group = characteristic, fill = characteristic)) +
   scale_x_continuous(name = "") +
   scale_y_continuous(name = "") +
   theme_classic() +
@@ -221,8 +224,8 @@ care_in_data %>%
   filter(la_name == "Birmingham", cla_group == "Gender", characteristic != "Total") %>%
   mutate(number = as.numeric(number)) %>%
   ggplot() +
-  geom_line(aes(x = time_period, y = number,
-                group = characteristic, colour = characteristic)) +
+  geom_area(aes(x = time_period, y = number,
+                group = characteristic, fill = characteristic)) +
   scale_x_continuous(name = "") +
   scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) +
   theme_classic() +
@@ -241,6 +244,19 @@ care_in_data %>%
   scale_y_continuous(name = "") + # , expand = c(0, 0), limits = c(0, NA)
   theme_classic() +
   theme(strip.background = element_blank())
+
+# REMANd!!!!
+care_in_data %>%
+  filter(la_name == "Birmingham", cla_group == "Legal status", characteristic == "Remand") %>% #
+  mutate(number = as.numeric(number)) %>%
+  ggplot() +
+  geom_line(aes(x = time_period, y = number)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) + # , expand = c(0, 0), limits = c(0, NA)
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_headcount_remand.png")
+
 # REMANd!!!!
 
 
@@ -352,12 +368,12 @@ care_out_data %>%
   filter(la_name == "Birmingham", cla_group == "Reason episode ceased", characteristic == "Sentenced to custody") %>%
   mutate(number = as.numeric(number)) %>%
   ggplot() +
-  geom_line(aes(x = time_period, y = number,
-                group = characteristic, colour = characteristic)) +
+  geom_line(aes(x = time_period, y = number)) +
   scale_x_continuous(name = "") +
   scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) +
   theme_classic() +
   theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_headcount_care2custody.png")
 
 
 #########rNEW OUTFLOW DATA######################################################################################################
