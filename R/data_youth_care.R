@@ -61,7 +61,7 @@ care_data %>%
   scale_y_continuous(name = "") + # , expand = c(0, 0), limits = c(0, NA)
   theme_classic() +
   theme(strip.background = element_blank())
-
+ggsave(filename = "Output/Graphs/birm_care_byLA.png")
 #########LEGAL STATUS######################################################################################################
 
 care_data %>%
@@ -74,6 +74,7 @@ care_data %>%
   scale_y_continuous(name = "") + # , expand = c(0, 0), limits = c(0, NA)
   theme_classic() +
   theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_care_bylegal.png")
 # note - the two years they were counting youth justice legal statuses one year was 16 and the other 21
 
 #########PLACE PROVIDERS######################################################################################################
@@ -88,7 +89,7 @@ care_data %>%
   scale_y_continuous(name = "") + # , expand = c(0, 0), limits = c(0, NA)
   theme_classic() +
   theme(strip.background = element_blank())
-
+ggsave(filename = "Output/Graphs/birm_care_byprovider.png")
 #########TYPE OF PLACEMENT######################################################################################################
 
 care_data %>%
@@ -136,29 +137,37 @@ care_data %>%
   scale_y_continuous(name = "") + # , expand = c(0, 0), limits = c(0, NA)
   theme_classic() +
   theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_care_byneed.png")
 
 
 ########summary######################################################################################################
 
-av_gender_care_data <- care_data %>%
+gender_care_data <- care_data %>%
   filter(la_name == "Birmingham", cla_group == "Gender", characteristic != "Total") %>%
   group_by(characteristic) %>%
-  mutate(number = as.numeric(number)) %>%
-  summarise(av_number = mean(number)) %>%
-  kable("latex", booktabs = TRUE)
+  mutate(number = as.numeric(number))
+
+av_gender <- gender_care_data %>%
+  summarise(av_number = mean(number))
 
 
-av_age_care_data <- care_data %>%
+age_care_data <- care_data %>%
   filter(la_name == "Birmingham", cla_group == "Age group", characteristic != "Total") %>%
   mutate(characteristic = fct_relevel(characteristic,
                                       "Under 1 year", "1 to 4 years", "5 to 9 years",
                                       "10 to 15 years", "16 years and over")) %>%
   group_by(characteristic) %>%
-  mutate(number = as.numeric(number)) %>%
+  mutate(number = as.numeric(number))
+
+tenplus_age_care_data <- age_care_data %>%
+  filter(characteristic == "10 to 15 years" | characteristic == "16 years and over") %>%
+
+
+av_age <- age_care_data %>%
   summarise(av_number = mean(number)) %>%
   kable("latex", booktabs = TRUE)
 
-av_res_care_data <- care_data %>%
+res_care_data <- care_data %>%
   filter(la_name == "Birmingham", cla_group == "Placement", characteristic != "Total") %>%
   mutate(number = as.numeric(number)) %>%
   filter(!is.na(number)) %>%
@@ -168,11 +177,15 @@ av_res_care_data <- care_data %>%
                                "residential", "non-residential")) %>%
   group_by(time_period, residential) %>%
   mutate(res_number = sum(number)) %>%
-  distinct(residential, time_period, res_number) %>%
+  distinct(residential, time_period, res_number)
+
+
+
+av_res <- res_care_data %>%
   ungroup() %>%
-  group_by(residential) %>%
-  summarise(av_number = mean(res_number)) %>%
-  kable("latex", booktabs = TRUE)
+    group_by(residential) %>%
+    summarise(av_number = mean(res_number)) %>%
+    kable("latex", booktabs = TRUE)
 
 #####################################################################################################
 #########NEW DATA - OUTCOMES######################################################################################################
@@ -262,7 +275,9 @@ care_in_data %>%
   scale_x_continuous(name = "") +
   scale_y_continuous(name = "") +
   theme_classic() +
-  theme(strip.background = element_blank())
+  theme(strip.background = element_blank()) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/birm_care_in_byage.png")
 
 #########GENDER######################################################################################################
 
@@ -276,7 +291,7 @@ care_in_data %>%
   scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) +
   theme_classic() +
   theme(strip.background = element_blank())
-
+ggsave(filename = "Output/Graphs/birm_care_in_bygender.png")
 
 #########LEGAL STATUS######################################################################################################
 
@@ -290,6 +305,7 @@ care_in_data %>%
   scale_y_continuous(name = "") + # , expand = c(0, 0), limits = c(0, NA)
   theme_classic() +
   theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_care_in_bylegal.png")
 
 # REMANd!!!!
 care_in_data %>%
@@ -318,7 +334,7 @@ care_in_data %>%
   scale_y_continuous(name = "") + # , expand = c(0, 0), limits = c(0, NA)
   theme_classic() +
   theme(strip.background = element_blank())
-
+ggsave(filename = "Output/Graphs/birm_care_in_byneed.png")
 
 ########summary######################################################################################################
 
@@ -381,6 +397,21 @@ av_reason_care_out_data <- care_out_data %>%
 
 #########AGE#####################################################################################################
 
+# care_out_data %>%
+#   filter(la_name == "Birmingham", cla_group == "Age group", characteristic != "Total") %>%
+#   mutate(number = as.numeric(number)) %>%
+#   mutate(characteristic = fct_relevel(characteristic,
+#                                       "Under 1 year", "1 to 4 years", "5 to 9 years",
+#                                       "10 to 15 years", "16 years", "17 years", "18 years and over")) %>%
+#   ggplot() +
+#   geom_line(aes(x = time_period, y = number,
+#                 group = characteristic, colour = characteristic)) +
+#   scale_x_continuous(name = "") +
+#   scale_y_continuous(name = "") +
+#   theme_classic() +
+#   theme(strip.background = element_blank())
+
+
 care_out_data %>%
   filter(la_name == "Birmingham", cla_group == "Age group", characteristic != "Total") %>%
   mutate(number = as.numeric(number)) %>%
@@ -388,25 +419,27 @@ care_out_data %>%
                                       "Under 1 year", "1 to 4 years", "5 to 9 years",
                                       "10 to 15 years", "16 years", "17 years", "18 years and over")) %>%
   ggplot() +
-  geom_line(aes(x = time_period, y = number,
-                group = characteristic, colour = characteristic)) +
+  geom_area(aes(x = time_period, y = number,
+                group = characteristic, fill = characteristic)) +
   scale_x_continuous(name = "") +
   scale_y_continuous(name = "") +
   theme_classic() +
-  theme(strip.background = element_blank())
-
+  theme(strip.background = element_blank()) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/birm_care_out_byage.png")
 #########GENDER######################################################################################################
 
 care_out_data %>%
   filter(la_name == "Birmingham", cla_group == "Gender", characteristic != "Total") %>%
   mutate(number = as.numeric(number)) %>%
   ggplot() +
-  geom_line(aes(x = time_period, y = number,
-                group = characteristic, colour = characteristic)) +
+  geom_area(aes(x = time_period, y = number,
+                group = characteristic, fill = characteristic)) +
   scale_x_continuous(name = "") +
-  scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) +
+  scale_y_continuous(name = "") +
   theme_classic() +
   theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_care_out_bygender.png")
 
 #########reason######################################################################################################
 
@@ -420,6 +453,17 @@ care_out_data %>%
   theme_classic() +
   theme(strip.background = element_blank())
 ggsave(filename = "Output/Graphs/birm_headcount_care2custody.png")
+
+care_out_data %>%
+  filter(la_name == "Birmingham", cla_group == "Reason episode ceased", characteristic != "Total") %>%
+  mutate(number = as.numeric(number)) %>%
+  ggplot() +
+  geom_line(aes(x = time_period, y = number, colour = characteristic)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/birm_care_out_byreason.png")
 
 
 #########rNEW OUTFLOW DATA######################################################################################################
@@ -449,23 +493,41 @@ ggsave(filename = "Output/Graphs/eng_headcount_care_duration_yearly.png")
 readin_data <- read.csv("/Users/katehayes/temp_data/children-looked-after-in-england-including-adoptions_2021/data/national_cla_ceased_during_year_placements_care_periods.csv")
 care_repeat_data <- readin_data
 
+# care_repeat_data %>%
+#  filter(cla_group == "Number of periods of care", periods_or_placements != "Total",
+#         periods_or_placements != "10 or more",
+#         age_on_ceasing != "Total",  age_on_ceasing != "Under 1 year",  age_on_ceasing != "1 to 4 years",  age_on_ceasing != "5 to 9 years",) %>%
+#  group_by(age_on_ceasing, periods_or_placements, time_period) %>%
+#   mutate(number = as.numeric(number)) %>%
+#   summarise(number = number) %>%
+#   mutate(number = if_else(is.na(number), 0, number)) %>%
+#   ggplot() +
+#   geom_line(aes(x = periods_or_placements, y = number,
+#                 group = age_on_ceasing, colour = age_on_ceasing)) +
+#   facet_wrap(~time_period) +
+#   scale_x_discrete(name = "") +
+#   scale_y_continuous(name = "") +
+#   theme_classic() +
+#   theme(strip.background = element_blank(), axis.text.x=element_text(angle = -35, hjust = 0)) +
+#   scale_colour_viridis(option = "viridis", discrete = TRUE)
+
 care_repeat_data %>%
- filter(cla_group == "Number of periods of care", periods_or_placements != "Total",
-        periods_or_placements != "10 or more",
-        age_on_ceasing != "Total",  age_on_ceasing != "Under 1 year",  age_on_ceasing != "1 to 4 years",  age_on_ceasing != "5 to 9 years",) %>%
- group_by(age_on_ceasing, periods_or_placements, time_period) %>%
+  filter(cla_group == "Number of periods of care", periods_or_placements != "Total",
+         periods_or_placements != "10 or more",
+         age_on_ceasing != "Total",  age_on_ceasing != "Under 1 year",  age_on_ceasing != "1 to 4 years",  age_on_ceasing != "5 to 9 years",) %>%
+  group_by(age_on_ceasing, periods_or_placements, time_period) %>%
   mutate(number = as.numeric(number)) %>%
   summarise(number = number) %>%
   mutate(number = if_else(is.na(number), 0, number)) %>%
   ggplot() +
-  geom_line(aes(x = periods_or_placements, y = number,
-                group = age_on_ceasing, colour = age_on_ceasing)) +
+  geom_bar(aes(x = age_on_ceasing, y = number,
+                fill = fct_rev(periods_or_placements)), position="stack", stat="identity") +
   facet_wrap(~time_period) +
   scale_x_discrete(name = "") +
   scale_y_continuous(name = "") +
   theme_classic() +
-  theme(strip.background = element_blank(), axis.text.x=element_text(angle = -35, hjust = 0)) +
-  scale_colour_viridis(option = "viridis", discrete = TRUE)
+  scale_fill_viridis(option = "viridis", discrete = TRUE) +
+  theme(strip.background = element_blank(), axis.text.x=element_text(angle = -35, hjust = 0))
 ggsave(filename = "Output/Graphs/eng_headcount_care_duration_yearly.png")
 
 # essentially, most people have one placement, not that many have more than 3

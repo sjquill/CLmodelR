@@ -429,8 +429,17 @@ school_data <- school_data %>%
   mutate(age = as.numeric(age)) %>%
   arrange(age)
 
+
+
+school_data <- school_data %>%
+  filter(la_name == "Birmingham", phase_type_grouping == "Pupil referral unit", age %in% 10:15)
+
+tot_school_data <- school_data %>%
+group_by(gender, year) %>%
+summarise(headcount = sum(headcount))
+
+
 school_data %>%
-  filter(la_name == "Birmingham", phase_type_grouping == "Pupil referral unit", age %in% 10:15) %>%
   mutate(age = as.factor(age)) %>%
   ggplot() +
   geom_area(aes(x = year, y = headcount, group = age, fill = fct_rev(age))) +
@@ -454,11 +463,7 @@ ggsave(filename = "Output/Graphs/birm_headcount_pru_byagegender_yearly.png")
 #   theme(strip.background = element_blank())
 # ggsave(filename = "Output/Graphs/birm_headcount_pru_byagegender.png")
 
-av_school_data <- school_data %>%
-  filter(la_name == "Birmingham", phase_type_grouping == "Pupil referral unit", age %in% 10:16) %>%
-  group_by(age, gender) %>%
-  summarise(headcount = mean(headcount)) %>%
-  kable("latex", booktabs = TRUE)
+
 
 
 ############################################################################################################
@@ -472,7 +477,7 @@ fsm_school_data <- fsm_school_data %>%
   mutate(year = as.numeric(paste(substr(fsm_school_data$academic_year, start = 1, stop = 2),
                                  substr(fsm_school_data$academic_year, start = 5, stop = 6), sep = ""))) %>%
   mutate(academic_year = paste(substr(fsm_school_data$academic_year, start = 1, stop = 4),
-                               substr(fsm_school_data$academic_year, start = 5, stop = 6), sep = "-")) %>%
+                               substr(fsm_school_data$academic_year, start = 5, stop = 6), sep = "-"))
 
 
 
@@ -497,18 +502,34 @@ ggsave(filename = "Output/Graphs/birm_percentfsm_byschool_yearly.png")
 
 
 
-av_fsm_school_data <- fsm_school_data %>%
-  filter(phase_type_grouping != "State-funded nursery", phase_type_grouping != "Total", la_name == "Birmingham") %>%
-  filter(fsm == "known to be eligible for free school meals (used for FSM in Performance Tables)" |
-           fsm == "number of pupils (used for FSM in Performance Tables)") %>%
-  mutate(fsm = if_else(fsm == "number of pupils (used for FSM in Performance Tables)", "total_headcount", "fsm_headcount")) %>%
-  group_by(phase_type_grouping, year, fsm) %>%
-  summarise(headcount = mean(headcount)) %>%
-  pivot_wider(names_from = fsm, values_from = headcount) %>%
-  ungroup() %>%
-  group_by(phase_type_grouping) %>%
-  summarise(av_fsm_rate = mean(fsm_headcount)/mean(total_headcount), av_headcount = mean(fsm_headcount)) %>%
-  kable("latex", booktabs = TRUE)
+# av_fsm_school_data <- fsm_school_data %>%
+#   filter(phase_type_grouping != "State-funded nursery", phase_type_grouping != "Total", la_name == "Birmingham") %>%
+#   filter(fsm == "known to be eligible for free school meals (used for FSM in Performance Tables)" |
+#            fsm == "number of pupils (used for FSM in Performance Tables)") %>%
+#   mutate(fsm = if_else(fsm == "number of pupils (used for FSM in Performance Tables)", "total_headcount", "fsm_headcount")) %>%
+#   group_by(phase_type_grouping, year, fsm) %>%
+#   summarise(headcount = mean(headcount)) %>%
+#   pivot_wider(names_from = fsm, values_from = headcount) %>%
+#   ungroup() %>%
+#   group_by(phase_type_grouping) %>%
+#   summarise(av_fsm_rate = mean(fsm_headcount)/mean(total_headcount), av_headcount = mean(fsm_headcount)) %>%
+#   kable("latex", booktabs = TRUE)
+
+
+pru_fsm_school_data <- fsm_school_data %>%
+  filter(phase_type_grouping == "Pupil referral unit", phase_type_grouping != "Total", la_name == "Birmingham") %>%
+  filter(fsm == "known to be eligible for free school meals" |
+           fsm == "number of pupils (used for FSM in Performance Tables)")
+
+# %>%
+#   mutate(fsm = if_else(fsm == "number of pupils (used for FSM in Performance Tables)", "total_headcount", "fsm_headcount")) %>%
+#   group_by(phase_type_grouping, year, fsm) %>%
+#   summarise(headcount = mean(headcount)) %>%
+#   pivot_wider(names_from = fsm, values_from = headcount) %>%
+#   ungroup() %>%
+#   group_by(phase_type_grouping) %>%
+#   summarise(av_fsm_rate = mean(fsm_headcount)/mean(total_headcount), av_headcount = mean(fsm_headcount)) %>%
+#   kable("latex", booktabs = TRUE)
 
 
 

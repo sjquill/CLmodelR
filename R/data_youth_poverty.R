@@ -15,7 +15,10 @@ poverty_data <- readin_data %>%
   filter(str_detect(`Local Authority [note 2]`, "Birmingham"))
 poverty_data <- poverty_data[,10:16] %>%
   pivot_longer(cols = 1:7, names_to = "year", values_to = "percent") %>%
-  mutate(year = as.numeric(str_extract(year, "[[:digit:]]+")))
+  mutate(year = as.numeric(str_extract(year, "[[:digit:]]+"))) %>%
+  mutate(diff = percent - lag(percent))
+
+
 # NOTE!!!! i do not like or trust these numbers. need to have a serious look - but will do for now
 kable(poverty_data, "latex", booktabs = TRUE)
 
