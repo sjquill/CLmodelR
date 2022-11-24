@@ -107,7 +107,7 @@ remand_data <- remand_data %>%
 
 remand_data$year <-  2021
 
-remand_data_21 <-  remand_data
+remand_data_21 <- remand_data
 
 ##year ending march 20
 
@@ -145,9 +145,9 @@ remand_data <- remand_data %>%
     `Remand type`=="Remand to Youth Detention Accommodation" ~ remand_group_names[3],
   ))
 
-remand_data$year <-  2020
+remand_data$year <- 2020
 
-remand_data_20 <-  remand_data
+remand_data_20 <- remand_data
 
 ##lol, so it worked for year ending March 20 (against all odds)
 ##obv need to come back and make it less hardcody and then make it a function that returns a dataset of all the years
@@ -239,6 +239,49 @@ remand_plot <- ggplot(remand_data, aes(x = year, y = number_remands, fill = rema
 remand_plot
 
 ## lets say remand into youth detention accommodation is about 10% of all remand episodes
+
+##################SENTENCING OUTCOMES FOR CHILDREN ON REMAND######################################
+remand_out_data <- read_xls("/Users/katehayes/temp_data/Ch 6 - Use of remand for children.xls", sheet = 7, skip = 3, n_max = 24)
+remand_out_data <- remand_out_data[19:21,]
+colnames(remand_out_data)[1] <- "outcome"
+
+remand_out_data <- remand_out_data %>%
+  mutate(`2015` = as.numeric(`2015`)) %>%
+  pivot_longer(!outcome, names_to = "year", values_to = "number")
+
+
+remand_out_data %>%
+  mutate(year = as.numeric(year)) %>%
+  mutate(outcome = factor(outcome, levels = c("Acquitted", "Non-custodial sentence", "Immediate custody"))) %>%
+  ggplot() +
+  geom_area(aes(x = year, y = number,
+                group = outcome, fill = outcome),
+            colour = "black", size = .2) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") + # , expand = c(0, 0), limits = c(0, NA)
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_brewer(palette = "Blues")
+ggsave(filename = "Output/Graphs/eng_remand_outcome.png")
+
+remand_out_data %>%
+  mutate(year = as.numeric(year)) %>%
+  mutate(outcome = factor(outcome, levels = c("Acquitted", "Non-custodial sentence", "Immediate custody"))) %>%
+  group_by(year) %>%
+  mutate(tot = sum(number)) %>%
+  mutate(number = number/tot) %>%
+  ggplot() +
+  geom_area(aes(x = year, y = number,
+                group = outcome, fill = outcome),
+            colour = "black", size = .2) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") + # , expand = c(0, 0), limits = c(0, NA)
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_brewer(palette = "Blues")
+ggsave(filename = "Output/Graphs/eng_remand_outcome_pc.png")
+
+
 
 ##################CHILDREN PROCEEDED AGAINST######################################
 ##in the youth justice statistics supplementaries you can get children proceeded against in magistrates court
@@ -399,13 +442,14 @@ custody_time_data <- custody_time_data %>%
 
 
 custody_time_data %>%
+  mutate(number_nights = factor(number_nights, levels = c("1 to 91 nights", "92 to 182 nights", "183 to 273 nights", "274+ nights"))) %>%
 ggplot() +
   geom_area(aes(x = as.numeric(year), y = number_in_timespan, fill = fct_rev(number_nights))) +
   scale_x_continuous(name = "") +
   scale_y_continuous(name = "") +
   theme_classic() +
   theme(strip.background = element_blank()) +
-  scale_fill_viridis(discrete = TRUE, direction = -1)
+  scale_fill_viridis(discrete = TRUE)
 ggsave(filename = "Output/Graphs/westmid_custody_bydur.png")
 
 #
@@ -559,7 +603,6 @@ first_cs_data %>%
   ggsave(filename = "Output/Graphs/eng_fte_custody.png")
 
 
-
   first_cs_data %>%
     group_by(year) %>%
     mutate(tot_yearly = sum(ft_entrants)) %>%
@@ -640,10 +683,23 @@ kable("latex", booktabs = TRUE)
 first_offence_data %>%
   filter(offence_type %in% c("Drug offences", "Possession of weapons",
                              "Violence against the person", "Sexual offences")) %>%
+  ggplot() +
+  geom_area(aes(x = as.numeric(year), y = ft_entrants, fill = sex)) +
+  facet_wrap(~offence_type) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/eng_fte_offence_tot.png")
+
+
+first_offence_data %>%
   group_by(year) %>%
-  mutate(tot_yearly = sum(ft_entrants)) %>%
-  group_by(year, sex, offence_type) %>%
-  mutate(percent = ft_entrants/tot_yearly) %>%
+  mutate(tot = sum(ft_entrants)) %>%
+  group_by(sex, offence_type, year) %>%
+  summarise(percent = ft_entrants/tot) %>%
+  filter(offence_type %in% c("Drug offences", "Possession of weapons",
+                             "Violence against the person", "Sexual offences")) %>%
   ggplot() +
   geom_area(aes(x = as.numeric(year), y = percent, fill = sex)) +
   facet_wrap(~offence_type) +
@@ -651,7 +707,8 @@ first_offence_data %>%
   scale_y_continuous(name = "") +
   theme_classic() +
   theme(strip.background = element_blank())
-ggsave(filename = "Output/Graphs/eng_fte_offence.png")
+ggsave(filename = "Output/Graphs/eng_fte_offence_percent.png")
+
 
 
 
@@ -660,5 +717,5 @@ ggsave(filename = "Output/Graphs/eng_fte_offence.png")
 #Can do time to reoffending, reoddending by disposal, by offence, by the young offenders institue you were in (think about which one birmingham kids are sent to)
 ######Table 9.7: Proven reoffending data for children in England and Wales by index disposal(1),  years ending March 2010 to 2020 and quarters for the year ending March 2020
 
-first_offence_data <- read_xlsx("/Users/katehayes/temp_data/Ch 9 - Proven reoffending by children.xls", sheet = 3, skip = 3, n_max = 53)
+reoffend_data <- read_xlsx("/Users/katehayes/temp_data/KH-Ch 9 - Proven reoffending by children.xls", sheet = 3, skip = 3, n_max = 53)
 

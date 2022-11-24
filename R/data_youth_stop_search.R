@@ -1,3 +1,7 @@
+
+# THIS FILE IS PARTICULARLY BAD
+
+
 ##seems like the data is actually decent on this lol
 ##https://www.gov.uk/government/statistics/police-powers-and-procedures-stop-and-search-and-arrests-england-and-wales-year-ending-31-march-2021
 
