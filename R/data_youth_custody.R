@@ -240,7 +240,7 @@ remand_plot
 
 ## lets say remand into youth detention accommodation is about 10% of all remand episodes
 
-##################SENTENCING OUTCOMES FOR CHILDREN ON REMAND######################################
+##################SENTENCING OUTCOMES FOR CHILDREN ON custody REMAND######################################
 remand_out_data <- read_xls("/Users/katehayes/temp_data/Ch 6 - Use of remand for children.xls", sheet = 7, skip = 3, n_max = 24)
 remand_out_data <- remand_out_data[19:21,]
 colnames(remand_out_data)[1] <- "outcome"
@@ -280,6 +280,79 @@ remand_out_data %>%
   theme(strip.background = element_blank()) +
   scale_fill_brewer(palette = "Blues")
 ggsave(filename = "Output/Graphs/eng_remand_outcome_pc.png")
+
+##################demographics FOR CHILDREN ON custody REMAND######################################
+# MONTHLY ACVERAGES
+
+remand_dem_data <- read_xls("/Users/katehayes/temp_data/Ch 6 - Use of remand for children.xls", sheet = 4, skip = 3, n_max = 10)
+remand_dem_data <- remand_dem_data[ , 1:12]
+
+rem_dem_age_data <- remand_dem_data[2:5, ] %>%
+  pivot_longer(!`Demographics for children on remand`, names_to = "year", values_to = "number")
+
+
+rem_dem_age_data %>%
+  mutate(year = as.numeric(year)) %>%
+  ggplot() +
+  geom_area(aes(x = year, y = number,
+                group = `Demographics for children on remand`, fill = `Demographics for children on remand`),
+            colour = "black", size = .2) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") + # , expand = c(0, 0), limits = c(0, NA)
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_brewer(palette = "Blues")
+ggsave(filename = "Output/Graphs/eng_remand_age.png")
+
+rem_dem_age_data %>%
+  mutate(year = as.numeric(year)) %>%
+  group_by(year) %>%
+  mutate(tot = sum(number)) %>%
+  mutate(number = number/tot) %>%
+  ggplot() +
+  geom_area(aes(x = year, y = number,
+                group = `Demographics for children on remand`, fill = `Demographics for children on remand`),
+            colour = "black", size = .2) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") + # , expand = c(0, 0), limits = c(0, NA)
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_brewer(palette = "Blues")
+ggsave(filename = "Output/Graphs/eng_remand_age_pc.png")
+
+
+rem_dem_sex_data <- remand_dem_data[9:10, ] %>%
+  pivot_longer(!`Demographics for children on remand`, names_to = "year", values_to = "number")
+
+
+rem_dem_sex_data %>%
+  mutate(year = as.numeric(year)) %>%
+  ggplot() +
+  geom_area(aes(x = year, y = number,
+                group = `Demographics for children on remand`, fill = `Demographics for children on remand`),
+            colour = "black", size = .2) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") + # , expand = c(0, 0), limits = c(0, NA)
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_brewer(palette = "Blues")
+ggsave(filename = "Output/Graphs/eng_remand_sex.png")
+
+rem_dem_sex_data %>%
+  mutate(year = as.numeric(year)) %>%
+  group_by(year) %>%
+  mutate(tot = sum(number)) %>%
+  mutate(number = number/tot) %>%
+  ggplot() +
+  geom_area(aes(x = year, y = number,
+                group = `Demographics for children on remand`, fill = `Demographics for children on remand`),
+            colour = "black", size = .2) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") + # , expand = c(0, 0), limits = c(0, NA)
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_brewer(palette = "Blues")
+ggsave(filename = "Output/Graphs/eng_remand_sex_pc.png")
 
 
 
