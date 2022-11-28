@@ -14,13 +14,23 @@ names(caut_sent_data) <- tolower(names(caut_sent_data))
 
 ########## GRAPHS###########################################################################
 
+check <- caut_sent_data %>%
+  filter(pcc == "West Midlands") %>%
+  mutate(year = as.numeric(substr(financial_year, 1, 4))) %>%
+  mutate(birm = if_else(yjs == "Birmingham", "Birmingham", "Rest of west mids"))
+
+# %>%
+#   group_by(year, birm) %>%
+#   summarise(number_cautioned_sentenced = sum(number_cautioned_sentenced)) %>%
+
+
 
 caut_sent_data %>%
   filter(pcc == "West Midlands") %>%
   mutate(year = as.numeric(substr(financial_year, 1, 4))) %>%
   mutate(birm = if_else(yjs == "Birmingham", "Birmingham", "Rest of west mids")) %>%
   group_by(year, birm) %>%
-  summarise(number_cautioned_sentenced = sum(number_cautioned_sentenced)) %>%
+  mutate(number_cautioned_sentenced = sum(number_cautioned_sentenced)) %>%
   ggplot( aes(x = year, y = number_cautioned_sentenced, fill = birm)) +
   geom_area() +
   scale_x_continuous(name = "") +
