@@ -565,6 +565,37 @@ custody_time_data2 <- custody_time_data2 %>%
   filter(number_nights != "Total")
 
 
+custody_time_data2 %>%
+  filter(number_nights != "Total", number_nights != "Median number of nights") %>%
+  mutate(legal_basis = factor(legal_basis,
+                                levels = c("Remand", "DTO(1)", "Other(2)"))) %>%
+  mutate(number_nights = factor(number_nights,
+                levels = c("1 to 91 nights", "92 to 182 nights", "183 to 273 nights", "274 to 365 nights", "274+ nights"))) %>%
+  group_by(legal_basis, year) %>%
+  mutate(tot = sum(number_in_timespan)) %>%
+  mutate(pc_in_timespan = number_in_timespan/tot) %>%
+  ggplot() +
+  geom_area(aes(x = as.numeric(year), y = pc_in_timespan, fill = number_nights)) +
+  facet_wrap(~legal_basis) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/westmid_custody_bydur.png")
+
+custody_time_data2 %>%
+  filter(number_nights == "Median number of nights") %>%
+  mutate(legal_basis = factor(legal_basis,
+                              levels = c("Remand", "DTO(1)", "Other(2)"))) %>%
+  ggplot() +
+  geom_line(aes(x = as.numeric(year), y = number_in_timespan, group = legal_basis, colour = legal_basis)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/westmid_custody_mediandur.png")
+
 ###getting averages, leaving out 21 bc it was weird
 av_cust_time_data2 <- custody_time_data2 %>%
   filter(year != "2021", number_nights != "Median number of nights") %>%
@@ -582,7 +613,167 @@ median <- custody_time_data2 %>%
   summarise(median = mean(number_in_timespan)) %>%
   kable("latex", booktabs = TRUE)
 
+##CHANGED YEAR OF YOUTH JUSTICE SUPPLEMENTARIES - GOING BACK A BIT TO TRY GET EARLIER.
+# Youth justice statistics: 2018 to 2019
+# CHAPTER 7 - children in youth custody
+##Table 7.32: Custodial episodes ending by YOT region(1) and nights, years ending March 2015 to 2019
 
+
+custody_time_data2 <- read_xlsx("/Users/katehayes/temp_data/youth-justice-stats-supplementary-tables-march-2019/Ch 7 - Children in youth custody.xls", sheet = 33, skip = 3, n_max = 72)
+custody_time_data2 <- custody_time_data2[65:71,2:7]
+custody_time_data2 <- custody_time_data2[-6,]
+colnames(custody_time_data2)[1] <- "number_nights"
+colnames(custody_time_data2)[2] <- "2015"
+colnames(custody_time_data2)[3] <- "2016"
+colnames(custody_time_data2)[4] <- "2017"
+colnames(custody_time_data2)[5] <- "2018"
+colnames(custody_time_data2)[6] <- "2019"
+
+custody_time_data2 <- custody_time_data2 %>%
+  pivot_longer(starts_with("20"),
+               names_to="year",
+               values_to="number_in_timespan")
+
+
+custody_time_data2 %>%
+  filter(number_nights != "Median number of nights") %>%
+  mutate(number_nights = factor(number_nights,
+                                levels = c("1 to 91 nights", "92 to 182 nights", "183 to 273 nights", "274 to 365 nights", "366+ nights"))) %>%
+  ggplot() +
+  geom_area(aes(x = as.numeric(year), y = number_in_timespan, fill = number_nights)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/westmid_custody_bydur2015.png")
+
+custody_time_data2 %>%
+  filter(number_nights != "Median number of nights") %>%
+  mutate(number_nights = factor(number_nights,
+                                levels = c("1 to 91 nights", "92 to 182 nights", "183 to 273 nights", "274 to 365 nights", "366+ nights"))) %>%
+  group_by(year) %>%
+  mutate(csum = rev(cumsum(rev(number_in_timespan)))) %>%
+  ggplot() +
+  geom_line(aes(x = number_nights, y = csum, group = year, colour = year)) +
+  scale_x_discrete(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank(), axis.text.x=element_text(angle = -45, hjust = 0)) +
+  scale_colour_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/westmid_custody_bydur2015_cumsum.png")
+
+
+
+custody_time_data2 %>%
+  filter(number_nights != "Median number of nights") %>%
+  mutate(number_nights = factor(number_nights,
+                                levels = c("1 to 91 nights", "92 to 182 nights", "183 to 273 nights", "274 to 365 nights", "366+ nights"))) %>%
+  group_by(year) %>%
+  mutate(tot = sum(number_in_timespan)) %>%
+  mutate(pc_in_timespan = number_in_timespan/tot) %>%
+  ggplot() +
+  geom_area(aes(x = as.numeric(year), y = pc_in_timespan, fill = number_nights)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/westmid_custody_bydur2015pc.png")
+
+
+custody_time_data2 %>%
+  filter(number_nights == "Median number of nights") %>%
+  ggplot() +
+  geom_line(aes(x = as.numeric(year), y = number_in_timespan)) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "", expand = c(0, 0), limits = c(0, NA)) +
+  theme_classic() +
+  theme(strip.background = element_blank())
+ggsave(filename = "Output/Graphs/westmid_custody_mediandur2015.png")
+
+# STILL IN THE EARLIER ONESYouth justice statistics: 2018 to 2019
+# CHAPTER 7 - children in youth custody
+##Table 7.27b: Custodial episodes ending (for custodial episodes less than 91 nights) by custodial order type and nights, years ending March 2015 to 2019
+
+custody_time_data2 <- read_xlsx("/Users/katehayes/temp_data/youth-justice-stats-supplementary-tables-march-2019/Ch 7 - Children in youth custody.xls", sheet = 28, skip = 33, n_max = 28)
+custody_time_data2 <- custody_time_data2[,1:7]
+custody_time_data2 <- custody_time_data2[-15,]
+colnames(custody_time_data2)[1] <- "legal_basis"
+colnames(custody_time_data2)[2] <- "number_nights"
+colnames(custody_time_data2)[3] <- "2015"
+colnames(custody_time_data2)[4] <- "2016"
+colnames(custody_time_data2)[5] <- "2017"
+colnames(custody_time_data2)[6] <- "2018"
+colnames(custody_time_data2)[7] <- "2019"
+
+custody_time_data2 <- custody_time_data2 %>%
+  mutate(legal_basis = vec_fill_missing(legal_basis, direction = c("down")))%>%
+  pivot_longer(starts_with("20"),
+               names_to="year",
+               values_to="number_in_timespan") %>%
+  filter(number_nights != "Total")
+
+
+custody_time_data2 %>%
+  mutate(number_nights = factor(number_nights,
+                levels = c("1 to 7 nights", "8 to 14 nights", "15 to 21 nights",
+                           "22 to 28 nights", "29 to 35 nights", "36 to 42 nights",
+                           "43 to 49 nights", "50 to 56 nights", "57 to 63 nights",
+                           "64 to 70 nights", "71 to 77 nights", "78 to 84 nights",
+                           "85 to 91 nights"))) %>%
+  ggplot() +
+  geom_area(aes(x = as.numeric(year), y = number_in_timespan, fill = number_nights)) +
+  facet_wrap(~legal_basis) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/eng_custody_bydur2015.png")
+
+
+custody_time_data2 %>%
+  mutate(number_nights = factor(number_nights,
+                levels = c("1 to 7 nights", "8 to 14 nights", "15 to 21 nights",
+                           "22 to 28 nights", "29 to 35 nights", "36 to 42 nights",
+                           "43 to 49 nights", "50 to 56 nights", "57 to 63 nights",
+                           "64 to 70 nights", "71 to 77 nights", "78 to 84 nights",
+                           "85 to 91 nights"))) %>%
+  group_by(year, legal_basis) %>%
+  mutate(tot = sum(number_in_timespan)) %>%
+  mutate(pc_in_timespan = number_in_timespan/tot) %>%
+  ggplot() +
+  geom_area(aes(x = as.numeric(year), y = pc_in_timespan, fill = number_nights)) +
+  facet_wrap(~legal_basis) +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank()) +
+  scale_fill_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/eng_custody_bydur2015pc.png")
+
+# NOTE TO SELF - DONT DO IT LIKE THIS _ MAKE CUMULATIVE/SURVICAL TYPE GRAPH
+# for each year and legal basis, 1-7 is the total and then each subsequent the number falls.
+
+custody_time_data2 %>%
+  mutate(number_nights = factor(number_nights,
+                                levels = c("1 to 7 nights", "8 to 14 nights", "15 to 21 nights",
+                                           "22 to 28 nights", "29 to 35 nights", "36 to 42 nights",
+                                           "43 to 49 nights", "50 to 56 nights", "57 to 63 nights",
+                                           "64 to 70 nights", "71 to 77 nights", "78 to 84 nights",
+                                           "85 to 91 nights"))) %>%
+  group_by(legal_basis, year) %>%
+  mutate(csum = rev(cumsum(rev(number_in_timespan)))) %>%
+  ggplot() +
+  geom_line(aes(x = number_nights, y = csum, group = year, colour = year)) +
+  facet_wrap(~legal_basis) +
+  scale_x_discrete(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank(), axis.text.x=element_text(angle = -45, hjust = 0)) +
+  scale_color_viridis(discrete = TRUE, direction = -1)
+ggsave(filename = "Output/Graphs/eng_custody_bydur2015_cumsum.png")
 
 ################# little extra pieces of detail######################################
 ##Chapter 2: First time entrants to the Youth Justice System########################
