@@ -4,6 +4,10 @@
 #NOTE also !!! what is a notifiable offense and are these just arrrests for noitifyable in which case,,, are there others.
 
 
+# there is also: table 1.6: Number of arrests for recorded crime (notifiable offences) by
+# police force area, by sex and age group, year ending March 2021
+# <- chapter one in youth justice supplementaries
+
 arrest_data <- read.csv("/Users/katehayes/temp_data/arrests-open-data-tables-ppp-2e (1).csv")
 
 arrest_data <- arrest_data %>%
