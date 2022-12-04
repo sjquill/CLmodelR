@@ -38,6 +38,30 @@ split_disposal <- function(disp_data, group) { #group has to be the right case -
     mutate(across(starts_with(tolower(group)), str_replace, pattern = paste(group,"_", sep = ""), replacement = ""))
 }
 
+#this is for the newer group of sheets , 14/15 and 15/16
+# splits into characteristics and level
+split_newer_disposal_wm <- function(disp_data, group) { #need to enter group without quotation marks
+    disp_data <- disp_data %>%
+    group_by(region, yot, disposal, {{ group }}) %>%
+    mutate(count = sum(count)) %>%
+    distinct(year, region, yot, disposal, {{ group }}, count) %>%
+    mutate(level = "west_midlands") %>%
+    filter(region == "West Midlands") %>%
+    group_by(disposal, {{ group }}) %>%
+    mutate(count = sum(count)) %>%
+    distinct(year, level, disposal, {{ group }}, count)
+    }
+
+  split_newer_disposal_b <- function(disp_data, group) { #need to enter group without quotation marks
+      disp_data <- disp_data %>%
+        mutate(level = "birmingham") %>%
+        filter(yot == "Birmingham") %>%
+        group_by(disposal, {{ group }}) %>%
+        mutate(count = sum(count)) %>%
+        distinct(year, level, disposal, {{ group }}, count)
+    }
+
+
 
 # SUMMARY of what we have for each year
 
@@ -48,7 +72,7 @@ split_disposal <- function(disp_data, group) { #group has to be the right case -
 # 2013/14 - age OR gender OR ethnicity -- birmingham and west mids
 # 2014/15 - age AND gender AND ethnicity -- birmingham and west mids
 # 2015/16 - age AND gender AND ethnicity -- birmingham and west mids
-# 2016/17 - age OR gender OR ethnicity -- birmingham and west mids
+# 2016/17 - age OR gender OR ethnicity -- west mids |
 # 2017/18 - no more disposals by characteristics!
 # 2018/19
 # 2019/20
@@ -233,10 +257,20 @@ disposal1314b_e_data <- split_disposal(disposal1314b_data, group = "Ethnicity")
 excel_sheets("/Users/katehayes/temp_data/local-level-data (1)/Disposal_by_YOT.xls")
 disposal_data <- read_xls("/Users/katehayes/temp_data/local-level-data (1)/Disposal_by_YOT.xls", sheet = 6, col_names = TRUE)
 
-disposal_data <- disposal_data %>%
-  mutate(year = "2014-15")
+disposal1415_data <- disposal_data[, -8] %>%
+  mutate(year = "2014-15") %>%
+  rename(yot = YOT, region = Region,
+         disposal = Outcome, age = Age, ethnicity = Ethn,
+         gender = Gen, count = Count)
 
+disposal1415wm_a_data <- split_newer_disposal_wm(disp_data = disposal1415_data, group = age)
+disposal1415b_a_data <- split_newer_disposal_b(disp_data = disposal1415_data, group = age)
 
+disposal1415wm_g_data <- split_newer_disposal_wm(disp_data = disposal1415_data, group = gender)
+disposal1415b_g_data <- split_newer_disposal_b(disp_data = disposal1415_data, group = gender)
+
+disposal1415wm_e_data <- split_newer_disposal_wm(disp_data = disposal1415_data, group = ethnicity)
+disposal1415b_e_data <- split_newer_disposal_b(disp_data = disposal1415_data, group = ethnicity)
 
 ########################NEW YEAR ################################################
 # https://www.gov.uk/government/statistics/youth-justice-statistics-2015-to-2016
@@ -245,6 +279,22 @@ excel_sheets("/Users/katehayes/temp_data/local-level-data-2015-to-2016/Disposals
 disposal_data <- read_xls("/Users/katehayes/temp_data/local-level-data-2015-to-2016/Disposals_by_YOT.xls", sheet = 6, col_names = TRUE)
 # col names are not the same as previous year - they're being less careful bc they expect it to be hidden
 
+disposal1516_data <- disposal_data[, -8] %>%
+  mutate(year = "2015-16") %>%
+  rename(yot = YOT2, region = Region,
+         disposal = OutRevised, age = Age_Revised, ethnicity = Ethnicity,
+         gender = Gen, count = CountOfSent_Out_ID)
+
+
+disposal1516wm_a_data <- split_newer_disposal_wm(disp_data = disposal1516_data, group = age)
+disposal1516b_a_data <- split_newer_disposal_b(disp_data = disposal1516_data, group = age)
+
+disposal1516wm_g_data <- split_newer_disposal_wm(disp_data = disposal1516_data, group = gender)
+disposal1516b_g_data <- split_newer_disposal_b(disp_data = disposal1516_data, group = gender)
+
+disposal1516wm_e_data <- split_newer_disposal_wm(disp_data = disposal1516_data, group = ethnicity)
+disposal1516b_e_data <- split_newer_disposal_b(disp_data = disposal1516_data, group = ethnicity)
+
 ########################NEW YEAR ################################################
 # https://www.gov.uk/government/statistics/youth-justice-annual-statistics-2016-to-2017
 # had to resave as an xlsx - originally xls?
@@ -252,7 +302,7 @@ disposal_data <- read_xls("/Users/katehayes/temp_data/local-level-data-2015-to-2
 excel_sheets("/Users/katehayes/temp_data/regional-level-tables.xlsx")
 disposal_data <- read_xlsx("/Users/katehayes/temp_data/regional-level-tables.xlsx", sheet = 7, col_names = TRUE)
 
-# is in a weird format - need to slplit into three for the three characteristics
+# is in a weird format - need to split into three for the three characteristics
 
 disposal_a_data <- disposal_data[, 1:4]
 disposal_g_data <- disposal_data[, 6:9]
