@@ -461,25 +461,91 @@ disposals_gender_data <- bind_rows(disposal0910wm_g_data, disposal1011wm_g_data)
 
   disposals_gender_data <- bind_rows(disposals_gender_data1, disposals_gender_data2, disposals_gender_data3)
 
-
+my_colours <- c("brown", "brown2", "deepskyblue4", "deepskyblue")
 
 disposals_gender_data %>%
    group_by(graph, year, level) %>%
    summarise(count = sum(count)) %>%
     ggplot() +
-    geom_area(aes(x = year, y = count, fill = level)) +
+    geom_area(aes(x = year, y = count, fill = fct_rev(level))) +
     facet_grid(~graph, scales = "free_x", space = "free") +
     scale_x_continuous(name = "",
-                       breaks = c(2009, 2010, 2011, 2012, 2012, 2014, 2015, 2016),
-                       labels = c("2009", "2010", "2011", "2012", "2012", "2014", "2015", "2016"),
+                       breaks = c(2009, 2011, 2012, 2012, 2014, 2016),
+                       labels = c("2009", "2011", "2012", "2012", "2014", "2016"),
                        expand = c(0,0)) +
-    scale_y_continuous(name = "") +
+    scale_y_continuous(name = "",
+                       expand = c(0,0)) +
     theme_classic() +
-    theme(strip.background = element_blank())
+    theme(strip.background = element_blank(),
+          strip.text = element_blank(),
+          panel.spacing = unit(0, "lines")) +
+  scale_fill_manual(values = my_colours)
+
+my_colours <- c("brown", "brown2", "deepskyblue4", "deepskyblue")
+
+disposals_gender_data %>%
+  filter(gender == "Female") %>%
+  group_by(graph, year, level, disposal_type) %>%
+  summarise(count = sum(count)) %>%
+  ggplot() +
+  geom_area(aes(x = year, y = count, fill = interaction(fct_rev(level), disposal_type))) +
+  facet_grid(~graph, scales = "free_x", space = "free") +
+  scale_x_continuous(name = "",
+                     breaks = c(2009, 2011, 2012, 2012, 2014, 2016),
+                     labels = c("2009", "2011", "2012", "2012", "2014", "2016"),
+                     expand = c(0,0)) +
+  scale_y_continuous(name = "",
+                     expand = c(0,0)) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.text = element_blank(),
+        panel.spacing = unit(0, "lines")) +
+  scale_fill_viridis(discrete = TRUE, direction = 1)
+
+disposals_gender_data %>%
+  filter(gender == "Male") %>%
+  group_by(graph, year, level, disposal_type) %>%
+  summarise(count = sum(count)) %>%
+  ggplot() +
+  geom_area(aes(x = year, y = count, fill = interaction(fct_rev(level), disposal_type))) +
+  facet_grid(~graph, scales = "free_x", space = "free") +
+  scale_x_continuous(name = "",
+                     breaks = c(2009, 2011, 2012, 2012, 2014, 2016),
+                     labels = c("2009", "2011", "2012", "2012", "2014", "2016"),
+                     expand = c(0,0)) +
+  scale_y_continuous(name = "",
+                     expand = c(0,0)) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.text = element_blank(),
+        panel.spacing = unit(0, "lines")) +
+  scale_fill_viridis(discrete = TRUE, direction = 1)
 
 
-  disposals_gender_data <- bind_rows(disposals_gender_data1, disposals_gender_data2, disposals_gender_data3) %>%
-    mutate(rest_wm = west_midlands - birmingham)
+check <- disposals_gender_data %>%
+  filter(gender == "Male", disposal_type == "Custody") %>%
+  group_by(graph, year, level, disposal) %>%
+  summarise(count = sum(count))
+
+# %>%
+  ggplot() +
+  geom_area(aes(x = year, y = count, fill = interaction(fct_rev(level), fct_rev(disposal)))) +
+  facet_grid(~graph, scales = "free_x", space = "free") +
+  scale_x_continuous(name = "",
+                     breaks = c(2009, 2011, 2012, 2012, 2014, 2016),
+                     labels = c("2009", "2011", "2012", "2012", "2014", "2016"),
+                     expand = c(0,0)) +
+  scale_y_continuous(name = "",
+                     expand = c(0,0)) +
+  theme_classic() +
+  theme(strip.background = element_blank(),
+        strip.text = element_blank(),
+        panel.spacing = unit(0, "lines")) +
+  scale_fill_viridis(discrete = TRUE, direction = 1)
+
+
+  # disposals_gender_data <- bind_rows(disposals_gender_data1, disposals_gender_data2, disposals_gender_data3) %>%
+  #   mutate(rest_wm = west_midlands - birmingham)
 
   # doing weird stuff with the data to see what graphs i can make
 
