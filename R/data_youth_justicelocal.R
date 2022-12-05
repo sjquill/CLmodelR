@@ -9,9 +9,9 @@
 #read in the data
 readin_data <- read_ods("/Users/katehayes/temp_data/Outcome_table.ods", sheet = 3)
 
-check <- readin_data %>%
+later_disposals <- readin_data %>%
   filter(Region == "West Midlands") %>%
-  group_by(Financial_Year) %>%
+  group_by(Financial_Year, ) %>%
   summarise(count = sum(Number_Cautioned_Sentenced))
 
 check
