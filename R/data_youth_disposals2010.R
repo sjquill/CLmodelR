@@ -59,7 +59,48 @@ split_newer_disposal_wm <- function(disp_data, group) { #need to enter group wit
         group_by(disposal, {{ group }}) %>%
         mutate(count = sum(count)) %>%
         distinct(year, level, disposal, {{ group }}, count)
+  }
+
+  # for the odd 16/17 one - for some reason this doesnt work for gender :) :)
+  split_newest_disposal <- function(disp_data, group) {
+    if(group == "age") {
+      disp_data <- disp_data[, 1:4]
+      colnames(disp_data)[1] <- "region"
+      colnames(disp_data)[2] <- group
+      colnames(disp_data)[3] <- "disposal"
+      colnames(disp_data)[4] <- "count"
+
+      disp_data <- disp_data %>%
+      filter(region == "West Midlands") %>%
+      mutate(year = "2016-17", level = "west_midlands") %>%
+      select(-region) %>%
+      mutate(age = case_when(age == "17+(1)" ~ "17+"))
+    } else if(group == "gender") {
+      disp_data <- disp_data[, 6:9]
+      colnames(disp_data)[1] <- "region"
+      colnames(disp_data)[2] <- group
+      colnames(disp_data)[3] <- "disposal"
+      colnames(disp_data)[4] <- "count"
+
+      disp_data <- disp_data %>%
+        filter(region == "West Midlands") %>%
+        mutate(year = "2016-17", level = "west_midlands") %>%
+        select(-region)
+    } else if(group == "ethnicity") {
+      disp_data <- disp_data[, 11:14]
+      colnames(disp_data)[1] <- "region"
+      colnames(disp_data)[2] <- group
+      colnames(disp_data)[3] <- "disposal"
+      colnames(disp_data)[4] <- "count"
+
+      disp_data <- disp_data %>%
+        filter(region == "West Midlands") %>%
+        mutate(year = "2016-17", level = "west_midlands") %>%
+        select(-region)
     }
+  }
+
+
 
 
 
@@ -87,7 +128,7 @@ split_newer_disposal_wm <- function(disp_data, group) { #need to enter group wit
 # Sheet R.1: Disposals given to young people, by region, 2009/10
 # WEST MIDS LEVEL
 
-# getting col names and setting disposal types
+# getting col names and setting disposal types & the disposals within them
 disposal_data <- read_xls("/Users/katehayes/temp_data/New Tables for Website/Regional tables.xls", sheet = 2, skip = 3, n_max = 1, col_names = TRUE)
 
 disposal_data <- disposal_data %>%
@@ -101,7 +142,7 @@ col_names <- paste(unlist(disposal_data[, 1]), unlist(disposal_data[, 2]), sep =
 col_names = c("disposal", col_names)
 
 disposal_types <- c("Pre-court", "First-tier", "Community", "Custody")
-group_types <- c("Age", "Gender", "Ethnicity")
+
 
 # now bringing in the data
 disposal_data <- read_xls("/Users/katehayes/temp_data/New Tables for Website/Regional tables.xls", sheet = 2, skip = 340, n_max = 32, col_names = FALSE)
@@ -232,6 +273,10 @@ disposal1314wm_a_data <- split_disposal(disposal1314wm_data, group = "Age")
 disposal1314wm_g_data <- split_disposal(disposal1314wm_data, group = "Gender")
 disposal1314wm_e_data <- split_disposal(disposal1314wm_data, group = "Ethnicity")
 
+# colnames(disposal_data)[17] <- "total"
+# disposal_data %>% filter(!is.na(total)) %>%  summarise(total = sum(total))
+
+
 
 # BIRMINGHAM LEVEL
 disposal_data <- read_xls("/Users/katehayes/temp_data/regional-tables 2/Disposals by region table 2013-14.xls", sheet = 10, skip = 32, n_max = 22, col_names = FALSE)
@@ -303,15 +348,164 @@ excel_sheets("/Users/katehayes/temp_data/regional-level-tables.xlsx")
 disposal_data <- read_xlsx("/Users/katehayes/temp_data/regional-level-tables.xlsx", sheet = 7, col_names = TRUE)
 
 # is in a weird format - need to split into three for the three characteristics
+disposal1617wm_a_data <- split_newest_disposal(disp_data = disposal_data, group = "age")
 
-disposal_a_data <- disposal_data[, 1:4]
-disposal_g_data <- disposal_data[, 6:9]
-disposal_e_data <- disposal_data[, 11:14]
+disposal1617wm_g_data <- disposal_data[, 6:9]
+colnames(disposal1617wm_g_data)[1] <- "region"
+colnames(disposal1617wm_g_data)[2] <- "gender"
+colnames(disposal1617wm_g_data)[3] <- "disposal"
+colnames(disposal1617wm_g_data)[4] <- "count"
+
+disposal1617wm_g_data <- disposal1617wm_g_data %>%
+  filter(region == "West Midlands") %>%
+  mutate(year = "2016-17", level = "west_midlands") %>%
+  select(-region)
+
+disposal1617wm_e_data <- split_newest_disposal(disp_data = disposal_data, group = "ethnicity")
+
 
 ################################################################################################################################
 # WHAT WAY DOES IT MAKE SENSE TO BIND EVERYTHING TOGETHER
 # PROBABLY BY CHARACTERISTIC group
 # LIKE ONE DATAFRAME FOR SEX, ONE FOR GENDER, ETC
 
+# getting disposal groupings
+disposals_gender_data <- bind_rows(disposal0910wm_g_data, disposal1011wm_g_data) %>%
+  bind_rows(disposal1011b_g_data) %>%
+  bind_rows(disposal1112wm_g_data) %>%
+  bind_rows(disposal1112b_g_data) %>%
+  bind_rows(disposal1213wm_g_data) %>%
+  bind_rows(disposal1213b_g_data) %>%
+  bind_rows(disposal1314wm_g_data) %>%
+  bind_rows(disposal1314b_g_data)
 
 
+precourt_list <- disposals_gender_data %>%
+  filter(disposal_type == "Pre-court") %>%
+  distinct(disposal)
+precourt_list <- unlist(precourt_list$disposal)
+
+firsttier_list <- disposals_gender_data %>%
+  filter(disposal_type == "First-tier") %>%
+  distinct(disposal)
+firsttier_list <- unlist(firsttier_list$disposal)
+
+community_list <- disposals_gender_data %>%
+  filter(disposal_type == "Community") %>%
+  distinct(disposal)
+community_list <- unlist(community_list$disposal)
+
+custody_list <- disposals_gender_data %>%
+  filter(disposal_type == "Custody") %>%
+  distinct(disposal)
+custody_list <- unlist(custody_list$disposal)
+
+
+
+# now making egnder the dataset
+disposals_gender_data <- bind_rows(disposal0910wm_g_data, disposal1011wm_g_data) %>%
+  bind_rows(disposal1011b_g_data) %>%
+  bind_rows(disposal1112wm_g_data) %>%
+  bind_rows(disposal1112b_g_data) %>%
+  bind_rows(disposal1213wm_g_data) %>%
+  bind_rows(disposal1213b_g_data) %>%
+  bind_rows(disposal1314wm_g_data) %>%
+  bind_rows(disposal1314b_g_data) %>%
+  bind_rows(disposal1415wm_g_data) %>%
+  bind_rows(disposal1415b_g_data) %>%
+  bind_rows(disposal1516wm_g_data) %>%
+  bind_rows(disposal1516b_g_data) %>%
+  bind_rows(disposal1617wm_g_data)
+
+  disposals_gender_data <- disposals_gender_data %>%
+  mutate(disposal_type = case_when(disposal %in% precourt_list ~ "Pre-court",
+                                   disposal %in% firsttier_list ~ "First-tier",
+                                   disposal %in% community_list ~ "Community",
+                                   disposal %in% custody_list ~ "Custody"))
+
+  disposals_gender_data <- disposals_gender_data %>%
+    pivot_wider(names_from = level, values_from = count)
+
+
+
+  # check3 <- disposals_gender_data %>%
+  #   filter(level == "west_midlands") %>%
+  #   group_by(year) %>%
+  #   summarise(count = sum(count))
+  # check3
+
+
+
+  #
+
+  disposals_gender_data1 <- disposals_gender_data %>%
+    filter(year == "2009-10" | year == "2010-11") %>%
+    mutate(year = as.numeric(substr(year, 1, 4))) %>%
+    mutate(birmingham = 0, rest_wm = 0) %>%
+    pivot_longer(cols =  west_midlands:rest_wm , names_to = "level", values_to = "count") %>%
+    mutate(graph = "first")
+  disposals_gender_data2 <- disposals_gender_data %>%
+    filter(year != "2009-10" & year != "2016-17") %>%
+    mutate(birmingham = replace_na(birmingham, 0)) %>%
+    mutate(rest_wm = west_midlands - birmingham) %>%
+    mutate(west_midlands = 0) %>%
+    pivot_longer(cols =  west_midlands:rest_wm , names_to = "level", values_to = "count") %>%
+    mutate(year = as.numeric(substr(year, 1, 4))) %>%
+    mutate(graph = "second")
+  disposals_gender_data3 <- disposals_gender_data %>%
+    filter(year == "2015-16" | year == "2016-17") %>%
+    mutate(birmingham = 0, rest_wm = 0) %>%
+    mutate(year = as.numeric(substr(year, 1, 4))) %>%
+    pivot_longer(cols =  west_midlands:rest_wm , names_to = "level", values_to = "count") %>%
+    mutate(graph = "third")
+
+  disposals_gender_data <- bind_rows(disposals_gender_data1, disposals_gender_data2, disposals_gender_data3)
+
+
+
+disposals_gender_data %>%
+   group_by(graph, year, level) %>%
+   summarise(count = sum(count)) %>%
+    ggplot() +
+    geom_area(aes(x = year, y = count, fill = level)) +
+    facet_grid(~graph, scales = "free_x", space = "free") +
+    scale_x_continuous(name = "",
+                       breaks = c(2009, 2010, 2011, 2012, 2012, 2014, 2015, 2016),
+                       labels = c("2009", "2010", "2011", "2012", "2012", "2014", "2015", "2016"),
+                       expand = c(0,0)) +
+    scale_y_continuous(name = "") +
+    theme_classic() +
+    theme(strip.background = element_blank())
+
+
+  disposals_gender_data <- bind_rows(disposals_gender_data1, disposals_gender_data2, disposals_gender_data3) %>%
+    mutate(rest_wm = west_midlands - birmingham)
+
+  # doing weird stuff with the data to see what graphs i can make
+
+  disposals_gender_data1 <- disposals_gender_data %>%
+    filter(year == "2009-10")
+  disposals_gender_data2 <- disposals_gender_data %>%
+    filter(year != "2009-10" & year != "2016-17") %>%
+    mutate(west_midlands = NA)
+  disposals_gender_data3 <- disposals_gender_data %>%
+    filter(year == "2016-17")
+
+disposals_gender_data <- bind_rows(disposals_gender_data1, disposals_gender_data2, disposals_gender_data3) %>%
+  pivot_longer(cols =  west_midlands:rest_wm , names_to = "level", values_to = "count")
+
+check <- disposals_gender_data %>%
+  mutate(year = as.numeric(substr(year, 1, 4))) %>%
+  group_by(year, level) %>%
+  summarise(count = sum(count)) %>%
+  filter(year %in% 2010:2015) %>%
+  ggplot(aes(x = year, y = count, fill = level, colour = level)) +
+  geom_area() +
+  scale_x_continuous(name = "") +
+  scale_y_continuous(name = "") +
+  theme_classic() +
+  theme(strip.background = element_blank())
+check
+
+# add on the last bit where you can't split by characteristics at all?
+readin_data <- read_ods("/Users/katehayes/temp_data/Outcome_table.ods", sheet = 3)

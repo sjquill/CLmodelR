@@ -4,9 +4,24 @@
 ################################################################################################################################
 ##children sentenced and cautioned in birmingham, yearly, financial year 2013/14 to 2020/21
 
+# I WAS USING PCC TO FILTER - PROBABLY A MISTAKE - STILL NOT CLEAR ON THE DIFFERENCE BETWEEN REGION AND PCC
+
 #read in the data
 readin_data <- read_ods("/Users/katehayes/temp_data/Outcome_table.ods", sheet = 3)
 
+check <- readin_data %>%
+  filter(Region == "West Midlands") %>%
+  group_by(Financial_Year) %>%
+  summarise(count = sum(Number_Cautioned_Sentenced))
+
+check
+
+check2 <- readin_data %>%
+  filter(PCC == "West Midlands") %>%
+  group_by(Financial_Year) %>%
+  summarise(count = sum(Number_Cautioned_Sentenced))
+
+check2
 #drop the NA column at the end, drop also any columns i don't want
 
 caut_sent_data <- readin_data[,1:8]
