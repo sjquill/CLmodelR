@@ -1,4 +1,7 @@
 library(stringr)
+library(tidyverse)
+library(readxl)
+library(vctrs)
 
 # functions #
 
@@ -543,9 +546,9 @@ disposals_gender_data <- bind_rows(disposal0910wm_g_data, disposal1011wm_g_data)
 
 #### #### START TO DO GRAPHS #### #### #### #### #### #### ####
 
-  # %>%
-    group_by(Financial_Year, ) %>%
-    summarise(count = sum(Number_Cautioned_Sentenced))
+  # # %>%
+  #   group_by(Financial_Year, ) %>%
+  #   summarise(count = sum(Number_Cautioned_Sentenced))
 
 my_colours <- c("brown", "brown2", "deepskyblue4", "deepskyblue")
 
@@ -586,25 +589,35 @@ my_colours <- c("#922B21", "#D98880", "#D98880",
 # my_colours4 <- c("#440154FF", "#481F70FF", "#481F70FF",
 #                   "#404688FF", "#31688EFF", "#31688EFF",
 #                 "#2C728EFF", "#21908CFF", "#21908CFF")
+
+# my_colours4 <- c("#626567", "#B2BABB", "#B2BABB",
+# "#2980B9", "#D6EAF8", "#D6EAF8",
+# "#17A589", "#D1F2EB", "#D1F2EB")
+#
 # my_colours4 <- c("#440154FF", "#472D7BFF", "#472D7BFF",
 #                  "#3B528BFF", "#31688EFF", "#31688EFF",
 #                  "#21908CFF", "#20A486FF", "#20A486FF")
-#
-# my_colours4 <- c("#440154FF", "#443A83FF", "#443A83FF",
-#                  "#2C728EFF", "#20A486FF", "#20A486FF",
-#                  "#75DO54FF", "#C7E020FF", "#C7E020FF")
+
+my_colours3<- c("#440154FF", "#443A83FF", "#443A83FF", # a kind of greeny blue one, nice
+                 "#2C728EFF", "#20A486FF", "#20A486FF",
+                 "#75D054FF", "#C7E020FF", "#C7E020FF")
+
+my_colours6<- c("#145A32", "#979A9A", "#979A9A",
+                "#20A486FF", "#B3B6B7", "#B3B6B7",
+                "#75D054FF", "#D0D3D4", "#D0D3D4")
 
 my_colours4 <- c("#440154FF", "#443A83FF", "#443A83FF",
                  "#2C728EFF", "#20A486FF", "#20A486FF",
                  "#75D054FF", "#C7E020FF", "#C7E020FF")
 
-my_colours5 <- c("#042333b2", "#403891b2", "#403891b2",
-                 "#a65c85b2", "#DE7065B2", "#DE7065B2",
-                 "#F68F46B2", "#F7CB44B2", "#F7CB44B2")
+my_colours5 <- c("#443A83FF", "#403891b2", "#403891b2",
+                 "#A65C68", "#DE7065B2", "#DE7065B2",
+                 "#F68F46B2", "#F7C144", "#F7C144")
 
-# "#626567", "#B2BABB", "#B2BABB",
-# "#2980B9", "#D6EAF8", "#D6EAF8",
-# "#17A589", "#D1F2EB", "#D1F2EB"
+# A65C68 C25B51 <- two nice reds
+#F7CB44B2" <- nice yelkow
+
+
 
 # red - C44B43, and lighter E39893
 # orange - D7813E and lighter EFB07E
@@ -657,7 +670,7 @@ disposals_gender_data %>%
         panel.spacing = unit(0, "lines"),
         plot.margin = unit(c(2, 3, 2, 1), "lines"),
         legend.position="none") +
-  scale_fill_manual(values = c(my_colours5, my_colours4))
+  scale_fill_manual(values = c(my_colours4, my_colours5))
 ggsave(filename = "Output/Graphs/birm_wm_disposals_bygender.png")
 
 
@@ -684,8 +697,8 @@ disposals_gender_data %>%
         panel.spacing = unit(0, "lines"),
         plot.margin = unit(c(2, 3, 2, 1), "lines"),
         legend.position="none") +
-  scale_fill_manual(values = my_colours4)
-ggsave(filename = "Output/Graphs/birm_wm_disposals_bygender.png")
+  scale_fill_manual(values = my_colours6)
+ggsave(filename = "Output/Graphs/birm_wm_disposals_bygender_greyscale.png")
 
 
 check <- disposals_gender_data %>%

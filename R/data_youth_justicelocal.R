@@ -6,6 +6,8 @@
 
 # I WAS USING PCC TO FILTER - PROBABLY A MISTAKE - STILL NOT CLEAR ON THE DIFFERENCE BETWEEN REGION AND PCC
 
+library(readODS)
+
 #read in the data
 readin_data <- read_ods("/Users/katehayes/temp_data/Outcome_table.ods", sheet = 3)
 
