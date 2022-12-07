@@ -68,7 +68,7 @@ clean_disposal_1516 <- function(disp_data) {
 }
 
 
-split_disposal_14to16 <- function(disp_data) { #need to enter group without quotation marks
+split_disposal_14to16 <- function(disp_data) { # returns list of lists
      disp_data_split_wm <- list()
      disp_data_split_b <- list()
      group_types <- alist(age, gender, ethnicity)
@@ -98,71 +98,41 @@ split_disposal_14to16 <- function(disp_data) { #need to enter group without quot
 return(list(disp_data_split_wm, disp_data_split_b))
 }
 
+##-------------16/17--------------------------------------------------------------------
 
+clean_and_split_disposal_1617 <- function(disp_data) {
+  disp_data_split_wm <- list()
+  group_types <- c("age", "gender", "ethnicity")
 
+   i <- 1
+   j <- 1
+   k <- j+3
 
+  for (group in group_types) {
 
+    data_splitting <- disp_data[, j:k]
+    colnames(data_splitting)[1] <- "region"
+    colnames(data_splitting)[2] <- group
+    colnames(data_splitting)[3] <- "disposal"
+    colnames(data_splitting)[4] <- "count"
 
-# splits into characteristics and level
-split_newer_disposal_wm <- function(disp_data, group) { #need to enter group without quotation marks
-
-
-  disp_data <- disp_data %>%
-    group_by(region, yot, disposal, {{ group }}) %>%
-    mutate(count = sum(count)) %>%
-    distinct(year, region, yot, disposal, {{ group }}, count) %>%
-    mutate(level = "west_midlands") %>%
-    filter(region == "West Midlands") %>%
-    group_by(disposal, {{ group }}) %>%
-    mutate(count = sum(count)) %>%
-    distinct(year, level, disposal, {{ group }}, count)
-}
-
-split_newer_disposal_b <- function(disp_data, group) { #need to enter group without quotation marks
-  disp_data <- disp_data %>%
-    mutate(level = "birmingham") %>%
-    filter(yot == "Birmingham") %>%
-    group_by(disposal, {{ group }}) %>%
-    mutate(count = sum(count)) %>%
-    distinct(year, level, disposal, {{ group }}, count)
-}
-
-# for the odd 16/17 one - for some reason this doesnt work for gender :) :)
-split_newest_disposal <- function(disp_data, group) {
-  if(group == "age") {
-    disp_data <- disp_data[, 1:4]
-    colnames(disp_data)[1] <- "region"
-    colnames(disp_data)[2] <- group
-    colnames(disp_data)[3] <- "disposal"
-    colnames(disp_data)[4] <- "count"
-
-    disp_data <- disp_data %>%
-      filter(region == "West Midlands") %>%
-      mutate(year = "2016-17", level = "west_midlands") %>%
-      select(-region) %>%
-      mutate(age = case_when(age == "17+(1)" ~ "17+"))
-  } else if(group == "gender") {
-    disp_data <- disp_data[, 6:9]
-    colnames(disp_data)[1] <- "region"
-    colnames(disp_data)[2] <- group
-    colnames(disp_data)[3] <- "disposal"
-    colnames(disp_data)[4] <- "count"
-
-    disp_data <- disp_data %>%
+    disp_data_split_wm[[i]] <- data_splitting %>%
       filter(region == "West Midlands") %>%
       mutate(year = "2016-17", level = "west_midlands") %>%
       select(-region)
-  } else if(group == "ethnicity") {
-    disp_data <- disp_data[, 11:14]
-    colnames(disp_data)[1] <- "region"
-    colnames(disp_data)[2] <- group
-    colnames(disp_data)[3] <- "disposal"
-    colnames(disp_data)[4] <- "count"
 
-    disp_data <- disp_data %>%
-      filter(region == "West Midlands") %>%
-      mutate(year = "2016-17", level = "west_midlands") %>%
-      select(-region)
+    if (i == 1) {
+     disp_data_split_wm[[i]] <- disp_data_split_wm[[i]] %>%
+       mutate(age = sub("\\(1\\)", "", age))
+    }
+
+    i <- i+1
+    j <- j+5
+    k <- j+3
   }
+
+return(disp_data_split_wm)
+
 }
+
 

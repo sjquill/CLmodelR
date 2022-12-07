@@ -39,7 +39,6 @@ library(readODS)
 # Youth justice annual statistics: 2009 to 2010, Workload tables, Regional Tables
 # Sheet R.1: Disposals given to young people, by region, 2009/10
 # WEST MIDS LEVEL
-
 # getting col names and setting disposal types & the disposals within them
 disposal_data <- read_xls("/Users/katehayes/temp_data/New Tables for Website/Regional tables.xls", sheet = 2, skip = 3, n_max = 1, col_names = TRUE)
 
@@ -56,21 +55,21 @@ col_names = c("disposal", col_names)
 disposal_types <- c("Pre-court", "First-tier", "Community", "Custody")
 group_types <- c("Age", "Gender", "Ethnicity")
 
+
+# start of data
+# https://www.gov.uk/government/statistics/youth-justice-annual-statistics-2009-2010
+# Youth justice annual statistics: 2009 to 2010, Workload tables, Regional Tables
+# Sheet R.1: Disposals given to young people, by region, 2009/10
+# WEST MIDS LEVEL
 # now bringing in the data
 disposal_data <- read_xls("/Users/katehayes/temp_data/New Tables for Website/Regional tables.xls", sheet = 2, skip = 340, n_max = 32, col_names = FALSE)
 
-disposal0910wm_data <- clean_disposal(disp_data = disposal_data,
-                                col_nm = col_names,
-                                disp_type = disposal_types,
-                                current_year = "2009-10",
-                                current_level = "west_midlands")
-
-split_disposal_0910wm <- split_disposal(disp_data = disposal0910wm_data, current_group_types = group_types)
-
-
-# disposal0910wm_a_data <- split_disposal_0910wm[[1]]
-# disposal0910wm_g_data <- split_disposal_0910wm[[2]]
-# disposal0910wm_e_data <- split_disposal_0910wm[[3]]
+disposal0910wm_data <- disposal_data %>%
+            clean_disposal_09to14(col_nm = col_names,
+                      disp_type = disposal_types,
+                      current_year = "2009-10",
+                      current_level = "west_midlands") %>%
+            split_disposal_09to14(current_group_types = group_types)
 
 ########################NEW YEAR ################################################
 # https://www.gov.uk/government/statistics/youth-justice-annual-statistics-2010-2011
@@ -81,27 +80,24 @@ split_disposal_0910wm <- split_disposal(disp_data = disposal0910wm_data, current
 # exact same strcuture as above so using the above code
 disposal_data <- read_xls("/Users/katehayes/temp_data/disposals-regionally-2010-11.xls", sheet = 10, skip = 4, n_max = 32, col_names = FALSE)
 
-disposal1011wm_data <- clean_disposal(disp_data = disposal_data,
-                                col_nm = col_names,
+disposal1011wm_data <- disposal_data %>%
+                      clean_disposal_09to14(col_nm = col_names,
                                 disp_type = disposal_types,
                                 current_year = "2010-11",
-                                current_level = "west_midlands")
-
-split_disposal_0910wm <- split_disposal(disp_data = disposal1011wm_data, current_group_types = group_types)
+                                current_level = "west_midlands") %>%
+          split_disposal_09to14(current_group_types = group_types)
 
 
 # BIRMINGHAM LEVEL
 disposal_data <- read_xls("/Users/katehayes/temp_data/disposals-regionally-2010-11.xls", sheet = 10, skip = 42, n_max = 32, col_names = FALSE)
 
-disposal1011b_data <- clean_disposal(disp_data = disposal_data,
-                             col_nm = col_names,
-                             disp_type = disposal_types,
-                             current_year = "2010-11",
-                             current_level = "birmingham")
+disposal1011b_data <- disposal_data %>%
+  clean_disposal_09to14(col_nm = col_names,
+                        disp_type = disposal_types,
+                        current_year = "2010-11",
+                        current_level = "birmingham") %>%
+  split_disposal_09to14(current_group_types = group_types)
 
-disposal1011b_a_data <- split_disposal(disposal1011b_data, group = "Age")
-disposal1011b_g_data <- split_disposal(disposal1011b_data, group = "Gender")
-disposal1011b_e_data <- split_disposal(disposal1011b_data, group = "Ethnicity")
 ########################NEW YEAR ################################################
 #https://www.gov.uk/government/statistics/youth-justice-statistics-2011-12
 # Youth justice annual statistics: 2011 to 2012,Youth justice statistics - regional data, Disposals by region 2011-12 v1.1
@@ -110,62 +106,48 @@ disposal1011b_e_data <- split_disposal(disposal1011b_data, group = "Ethnicity")
 # WEST MIDS LEVEL
 disposal_data <- read_xls("/Users/katehayes/temp_data/local-level-data-11-12/Disposals by region 2011-12 v1.1.xls", sheet = 10, skip = 4, n_max = 33, col_names = FALSE)
 
-disposal1112wm_data <- clean_disposal(disp_data = disposal_data,
-                                      col_nm = col_names,
-                                      disp_type = disposal_types,
-                                      current_year = "2011-12",
-                                      current_level = "west_midlands")
-
-disposal1112wm_a_data <- split_disposal(disposal1112wm_data, group = "Age")
-disposal1112wm_g_data <- split_disposal(disposal1112wm_data, group = "Gender")
-disposal1112wm_e_data <- split_disposal(disposal1112wm_data, group = "Ethnicity")
+disposal1112wm_data <- disposal_data %>%
+  clean_disposal_09to14(col_nm = col_names,
+                        disp_type = disposal_types,
+                        current_year = "2011-12",
+                        current_level = "west_midlands") %>%
+  split_disposal_09to14(current_group_types = group_types)
 
 # BIRMINGHAM LEVEL
 disposal_data <- read_xls("/Users/katehayes/temp_data/local-level-data-11-12/Disposals by region 2011-12 v1.1.xls", sheet = 10, skip = 43, n_max = 33, col_names = FALSE)
 
+disposal1112b_data <- disposal_data %>%
+        clean_disposal_09to14(col_nm = col_names,
+                              disp_type = disposal_types,
+                              current_year = "2011-12",
+                              current_level = "birmingham") %>%
+        split_disposal_09to14(current_group_types = group_types)
 
-disposal1112b_data <- clean_disposal(disp_data = disposal_data,
-                                     col_nm = col_names,
-                                     disp_type = disposal_types,
-                                     current_year = "2011-12",
-                                     current_level = "birmingham")
-
-disposal1112b_a_data <- split_disposal(disposal1112b_data, group = "Age")
-disposal1112b_g_data <- split_disposal(disposal1112b_data, group = "Gender")
-disposal1112b_e_data <- split_disposal(disposal1112b_data, group = "Ethnicity")
 ########################NEW YEAR ################################################
 # https://www.gov.uk/government/statistics/youth-justice-statistics
 # Youth justice annual statistics: 2012 to 2013,YRegional tables - 2013, Disposals by region 2012-13 Table.xls
 # sheet 10 - west midlands
 
 # WEST MIDS LEVEL
-excel_sheets("/Users/katehayes/temp_data/regional-tables-2013/Disposals by region 2012-13 Table.xls")
-
 disposal_data <- read_xls("/Users/katehayes/temp_data/regional-tables-2013/Disposals by region 2012-13 Table.xls", sheet = 10, skip = 4, n_max = 26, col_names = FALSE)
 
-disposal1213wm_data <- clean_disposal(disp_data = disposal_data,
-                                      col_nm = col_names,
-                                      disp_type = disposal_types,
-                                      current_year = "2012-13",
-                                      current_level = "west_midlands")
+disposal1213wm_data <- disposal_data %>%
+          clean_disposal_09to14(col_nm = col_names,
+                                disp_type = disposal_types,
+                                current_year = "2012-13",
+                                current_level = "west_midlands") %>%
+          split_disposal_09to14(current_group_types = group_types)
 
-disposal1213wm_a_data <- split_disposal(disposal1213wm_data, group = "Age")
-disposal1213wm_g_data <- split_disposal(disposal1213wm_data, group = "Gender")
-disposal1213wm_e_data <- split_disposal(disposal1213wm_data, group = "Ethnicity")
 
 # BIRMINGHAM LEVEL
 disposal_data <- read_xls("/Users/katehayes/temp_data/regional-tables-2013/Disposals by region 2012-13 Table.xls", sheet = 10, skip = 36, n_max = 26, col_names = FALSE)
 
-disposal1213b_data <- clean_disposal(disp_data = disposal_data,
-                                     col_nm = col_names,
-                                     disp_type = disposal_types,
-                                     current_year = "2012-13",
-                                     current_level = "birmingham")
-
-disposal1213b_a_data <- split_disposal(disposal1213b_data, group = "Age")
-disposal1213b_g_data <- split_disposal(disposal1213b_data, group = "Gender")
-disposal1213b_e_data <- split_disposal(disposal1213b_data, group = "Ethnicity")
-
+disposal1213b_data <- disposal_data %>%
+                        clean_disposal_09to14(col_nm = col_names,
+                                        disp_type = disposal_types,
+                                        current_year = "2012-13",
+                                        current_level = "birmingham") %>%
+                        split_disposal_09to14(current_group_types = group_types)
 
 ########################NEW YEAR ################################################
 # https://www.gov.uk/government/statistics/youth-justice-annual-statistics-2013-to-2014
@@ -175,33 +157,23 @@ disposal1213b_e_data <- split_disposal(disposal1213b_data, group = "Ethnicity")
 # WEST MIDS LEVEL
 disposal_data <- read_xls("/Users/katehayes/temp_data/regional-tables 2/Disposals by region table 2013-14.xls", sheet = 10, skip = 4, n_max = 22, col_names = FALSE)
 
-disposal1314wm_data <- clean_disposal(disp_data = disposal_data,
-                                      col_nm = col_names,
-                                      disp_type = disposal_types,
-                                      current_year = "2013-14",
-                                      current_level = "west_midlands")
-
-disposal1314wm_a_data <- split_disposal(disposal1314wm_data, group = "Age")
-disposal1314wm_g_data <- split_disposal(disposal1314wm_data, group = "Gender")
-disposal1314wm_e_data <- split_disposal(disposal1314wm_data, group = "Ethnicity")
-
-# colnames(disposal_data)[17] <- "total"
-# disposal_data %>% filter(!is.na(total)) %>%  summarise(total = sum(total))
-
+disposal1314wm_data <- disposal_data %>%
+          clean_disposal_09to14(col_nm = col_names,
+                                disp_type = disposal_types,
+                                current_year = "2013-14",
+                                current_level = "west_midlands") %>%
+          split_disposal_09to14(current_group_types = group_types)
 
 
 # BIRMINGHAM LEVEL
 disposal_data <- read_xls("/Users/katehayes/temp_data/regional-tables 2/Disposals by region table 2013-14.xls", sheet = 10, skip = 32, n_max = 22, col_names = FALSE)
 
-disposal1314b_data <- clean_disposal(disp_data = disposal_data,
-                                     col_nm = col_names,
-                                     disp_type = disposal_types,
-                                     current_year = "2013-14",
-                                     current_level = "birmingham")
-
-disposal1314b_a_data <- split_disposal(disposal1314b_data, group = "Age")
-disposal1314b_g_data <- split_disposal(disposal1314b_data, group = "Gender")
-disposal1314b_e_data <- split_disposal(disposal1314b_data, group = "Ethnicity")
+disposal1314b_data <- disposal_data %>%
+          clean_disposal_09to14(col_nm = col_names,
+                                disp_type = disposal_types,
+                                current_year = "2013-14",
+                                current_level = "birmingham") %>%
+          split_disposal_09to14(current_group_types = group_types)
 
 
 
@@ -211,63 +183,39 @@ disposal1314b_e_data <- split_disposal(disposal1314b_data, group = "Ethnicity")
 # ODD HIDDEN SHEETS STARTS HERE
 # CHANGE OF CODE BC DIFFERENT FORMAT
 
-excel_sheets("/Users/katehayes/temp_data/local-level-data (1)/Disposal_by_YOT.xls")
+# excel_sheets("/Users/katehayes/temp_data/local-level-data (1)/Disposal_by_YOT.xls")
 disposal_data <- read_xls("/Users/katehayes/temp_data/local-level-data (1)/Disposal_by_YOT.xls", sheet = 6, col_names = TRUE)
 
-disposal1415_data <- clean_disposal_1415(disposal_data)
+disposal1415_data <- disposal_data %>%
+  clean_disposal_1415() %>%
+  split_disposal_14to16()
 
-disposal1415_data <- split_disposal_14to16(disposal1415_data)
 
-check <- disposal1415_data[[2]][[3]]
-disposal1415b_g_data <- disposal1415_data1[[2]][[3]]
-disposal1415b_a_data <- split_newer_disposal_b(disp_data = disposal1415_data, group = age)
-
-disposal1415wm_g_data <- split_newer_disposal_wm(disp_data = disposal1415_data, group = gender)
-disposal1415b_g_data <- split_newer_disposal_b(disp_data = disposal1415_data, group = gender)
-
-disposal1415wm_e_data <- split_newer_disposal_wm(disp_data = disposal1415_data, group = ethnicity)
-disposal1415b_e_data <- split_newer_disposal_b(disp_data = disposal1415_data, group = ethnicity)
 
 ########################NEW YEAR ################################################
 # https://www.gov.uk/government/statistics/youth-justice-statistics-2015-to-2016
 
-excel_sheets("/Users/katehayes/temp_data/local-level-data-2015-to-2016/Disposals_by_YOT.xls")
+# excel_sheets("/Users/katehayes/temp_data/local-level-data-2015-to-2016/Disposals_by_YOT.xls")
 disposal_data <- read_xls("/Users/katehayes/temp_data/local-level-data-2015-to-2016/Disposals_by_YOT.xls", sheet = 6, col_names = TRUE)
 # col names are not the same as previous year - they're being less careful bc they expect it to be hidden
 
-disposal1516_data <- clean_disposal_1516(disposal_data)
+disposal1516_data <- disposal_data %>%
+clean_disposal_1516() %>%
+split_disposal_14to16()
 
-disposal1516wm_a_data <- split_newer_disposal_wm(disp_data = disposal1516_data, group = age)
-disposal1516b_a_data <- split_newer_disposal_b(disp_data = disposal1516_data, group = age)
-
-disposal1516wm_g_data <- split_newer_disposal_wm(disp_data = disposal1516_data, group = gender)
-disposal1516b_g_data <- split_newer_disposal_b(disp_data = disposal1516_data, group = gender)
-
-disposal1516wm_e_data <- split_newer_disposal_wm(disp_data = disposal1516_data, group = ethnicity)
-disposal1516b_e_data <- split_newer_disposal_b(disp_data = disposal1516_data, group = ethnicity)
 
 ########################NEW YEAR ################################################
 # https://www.gov.uk/government/statistics/youth-justice-annual-statistics-2016-to-2017
 # had to resave as an xlsx - originally xls?
 
 excel_sheets("/Users/katehayes/temp_data/regional-level-tables.xlsx")
+# is in a weird format
 disposal_data <- read_xlsx("/Users/katehayes/temp_data/regional-level-tables.xlsx", sheet = 7, col_names = TRUE)
 
-# is in a weird format - need to split into three for the three characteristics
-disposal1617wm_a_data <- split_newest_disposal(disp_data = disposal_data, group = "age")
 
-disposal1617wm_g_data <- disposal_data[, 6:9]
-colnames(disposal1617wm_g_data)[1] <- "region"
-colnames(disposal1617wm_g_data)[2] <- "gender"
-colnames(disposal1617wm_g_data)[3] <- "disposal"
-colnames(disposal1617wm_g_data)[4] <- "count"
+disposal1617_data <- disposal_data %>%
+  clean_and_split_disposal_1617()
 
-disposal1617wm_g_data <- disposal1617wm_g_data %>%
-  filter(region == "West Midlands") %>%
-  mutate(year = "2016-17", level = "west_midlands") %>%
-  select(-region)
-
-disposal1617wm_e_data <- split_newest_disposal(disp_data = disposal_data, group = "ethnicity")
 
 ##########MOST RECENT ONE###############################################################
 
