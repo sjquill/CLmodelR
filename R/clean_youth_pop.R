@@ -3,6 +3,8 @@ library(kableExtra)
 library(readxl)
 library(tidyverse)
 
+#hey x
+
 readin_df <- read_excel("/Users/katehayes/CL model/data4model/population/nomis_2022_07_19POP DATA FROM GOVT WEBSITE.xlsx")
 
 ##drop below fives, and the summary ages every five years, and above 24
